@@ -160,6 +160,13 @@ def month_stacked(df):
 raw, mode = load_raw()
 df = enrich(raw)
 
+# ---- pop-up แจ้งเตือนหลังบันทึกสำเร็จ (แสดงหลัง rerun) ----
+_saved = st.session_state.pop("_saved_rows", None)
+if _saved is not None:
+    st.toast(f"บันทึกกลับ Google Sheet สำเร็จ ({_saved} แถว) ✓", icon="✅")
+    try: st.balloons()
+    except Exception: pass
+
 # ---- header ----
 left,right=st.columns([4,1])
 with left:
@@ -290,7 +297,7 @@ with tab3:
                 values=[list(out.columns)]+out.fillna("").astype(str).values.tolist()
                 ws.clear(); ws.update(values=values, range_name="A1")
                 st.cache_data.clear()
-                st.success(f"บันทึกแล้ว ✓ ({len(out)} แถว) กำลังรีเฟรช…")
+                st.session_state["_saved_rows"]=len(out)   # ให้ pop-up เด้งหลัง rerun
                 st.rerun()
             except Exception as e:
                 st.error(f"บันทึกไม่สำเร็จ: {e}")
