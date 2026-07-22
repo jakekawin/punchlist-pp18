@@ -48,11 +48,18 @@ def has_secret(k):
 # ----------------------------------------------------------------------------
 @st.cache_resource(show_spinner=False)
 def get_ws():
-    if has_secret("gcp_service_account") and has_secret("sheet_url"):
+    # รองรับ service account 2 แบบ: วาง JSON ทั้งก้อน (gcp_service_account_json) หรือ TOML table (gcp_service_account)
+    info=None
+    if has_secret("gcp_service_account_json"):
+        import json as _json
+        info=_json.loads(str(st.secrets["gcp_service_account_json"]))
+    elif has_secret("gcp_service_account"):
+        info=dict(st.secrets["gcp_service_account"])
+    if info and has_secret("sheet_url"):
         import gspread
         from google.oauth2.service_account import Credentials
         scopes=["https://www.googleapis.com/auth/spreadsheets"]
-        creds=Credentials.from_service_account_info(dict(st.secrets["gcp_service_account"]), scopes=scopes)
+        creds=Credentials.from_service_account_info(info, scopes=scopes)
         gc=gspread.authorize(creds)
         sh=gc.open_by_url(st.secrets["sheet_url"])
         wsname=sget("worksheet","Punchlist")
