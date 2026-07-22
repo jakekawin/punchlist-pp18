@@ -83,6 +83,7 @@ def load_raw():
     for c in ALL_COLS:
         if c not in df.columns: df[c]=""
     df=df[[c for c in ALL_COLS if c in df.columns]]
+    df=df.fillna("")   # กันค่า NaN โผล่เป็น "nan" ในหน้าจอ
     df=df[df[C_NO].astype(str).str.strip()!=""]      # ตัดแถวว่าง
     return df.reset_index(drop=True), mode
 
