@@ -235,17 +235,15 @@ with tab1:
         ql=q.lower()
         hay=view[[C_LOC,C_DETAIL,C_DWG,C_RED,C_OWNER,C_FLOOR,C_SYS]].astype(str).agg(" ".join,axis=1).str.lower()
         view=view[hay.str.contains(ql, na=False)]
-    st.caption(f"แสดง {len(view)} / {tot} จุด")
-    disp=pd.DataFrame({
-        "#": view[C_NO].astype("Int64"),
-        "ชั้น": view[C_FLOOR], "ระบบ": view[C_SYS],
-        "Drawing No.": view[C_DWG].astype(str)+" · น."+view[C_PAGE].astype(str).str.replace(r"\.0$","",regex=True),
-        "ตำแหน่ง/บริเวณ": view[C_LOC], "รายละเอียด": view[C_DETAIL],
-        "ผู้รับผิดชอบ": view[C_OWNER], "กำหนดเสร็จ": view[C_DUE],
-        "เหลือ": view.apply(fmt_days,axis=1),
-        "สถานะ": view[C_STATUS].map(lambda s: STATUS_META.get(s,{}).get("icon","")+" "+STATUS_META.get(s,{}).get("short",str(s))),
-    })
-    st.dataframe(disp, use_container_width=True, hide_index=True, height=520)
+    st.caption(f"แสดง {len(view)} / {tot} จุด  ·  คอลัมน์ตรงกับ Google Sheet")
+    disp = view[ALL_COLS].copy()          # แสดงครบทุกคอลัมน์ เรียงเหมือนใน Google Sheet
+    for c in (C_NO, C_PAGE):
+        disp[c] = pd.to_numeric(disp[c], errors="coerce").astype("Int64")
+    st.dataframe(disp, use_container_width=True, hide_index=True, height=560,
+        column_config={
+            C_NO:   st.column_config.NumberColumn("ลำดับ", format="%d", width="small"),
+            C_PAGE: st.column_config.NumberColumn("หน้า", format="%d", width="small"),
+        })
 
 with tab2:
     nos=sorted(df[C_NO].dropna().astype(int).tolist())
