@@ -179,6 +179,78 @@ def del_done_photo(no, pid):
         if str(r[0]).strip()==str(no) and len(r)>1 and str(r[1]).strip()==str(pid):
             dws.delete_rows(i); return
 
+# ---- แบบแปลนติดจุด (interactive plan viewer) ----
+PLANS_DIR=os.path.join(APP_DIR,"plans")
+@st.cache_data(show_spinner=False)
+def load_plans_meta():
+    import json as _j
+    try:
+        with open(os.path.join(PLANS_DIR,"plans_meta.json"),encoding="utf-8") as fh:
+            return _j.load(fh)
+    except Exception:
+        return {"plans":[],"points":{}}
+@st.cache_data(show_spinner=False)
+def plan_img_url(key):
+    p=os.path.join(PLANS_DIR,key+".jpg")
+    if not os.path.exists(p): return ""
+    return "data:image/jpeg;base64,"+base64.b64encode(open(p,"rb").read()).decode()
+
+_PLAN_TPL = r"""<meta charset="utf-8">
+<style>
+#wrap{position:relative;width:100%;height:__H__px;overflow:hidden;background:#eceae6;border:1px solid #d9d7d2;border-radius:10px;touch-action:none;font-family:-apple-system,Segoe UI,Roboto,'Noto Sans Thai',sans-serif;}
+#stage{position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform;}
+#plan{display:block;-webkit-user-select:none;user-select:none;pointer-events:none;}
+.mk{position:absolute;transform:translate(-50%,-50%);width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:14px;border:2.5px solid #fff;box-shadow:0 1px 5px rgba(0,0,0,.55);cursor:pointer;}
+.mk:hover{box-shadow:0 0 0 4px rgba(0,0,0,.22),0 1px 5px rgba(0,0,0,.55);}
+#bar{position:absolute;left:10px;top:10px;right:10px;background:rgba(22,22,22,.88);color:#fff;padding:8px 12px;border-radius:8px;font-size:13px;display:none;z-index:5;pointer-events:none;}
+#card{position:absolute;right:10px;bottom:10px;width:min(360px,74%);max-height:80%;overflow:auto;background:#fff;border:1px solid #ccc;border-radius:10px;box-shadow:0 5px 20px rgba(0,0,0,.3);padding:14px 16px 16px;font-size:13.5px;line-height:1.55;display:none;z-index:6;}
+#card h4{margin:0 0 8px;font-size:15.5px;padding-right:20px;}
+#card .x{position:absolute;right:12px;top:9px;cursor:pointer;color:#999;font-size:19px;font-weight:700;}
+#ctl{position:absolute;left:10px;bottom:10px;display:flex;gap:6px;z-index:5;}
+#ctl button{width:34px;height:34px;border:none;border-radius:8px;background:rgba(22,22,22,.82);color:#fff;font-size:18px;cursor:pointer;line-height:1;}
+#hint{position:absolute;right:10px;top:10px;background:rgba(255,255,255,.86);color:#555;padding:4px 8px;border-radius:6px;font-size:11px;z-index:4;}
+</style>
+<div id="wrap">
+ <div id="stage"><img id="plan" src="__IMG__"/></div>
+ <div id="bar"></div><div id="card"></div>
+ <div id="hint">ลาก = เลื่อน · ล้อเมาส์ = ซูม</div>
+ <div id="ctl"><button id="zin">+</button><button id="zout">−</button><button id="zr">⤢</button></div>
+</div>
+<script>
+const PTS=__PTS__;
+const wrap=document.getElementById('wrap'),stage=document.getElementById('stage'),plan=document.getElementById('plan'),bar=document.getElementById('bar'),card=document.getElementById('card');
+let scale=1,tx=0,ty=0;
+function apply(){stage.style.transform='translate('+tx+'px,'+ty+'px) scale('+scale+')';}
+function esc(s){return (s==null?'':(''+s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function showCard(p){card.style.display='block';
+ card.innerHTML='<span class="x">✕</span><h4>'+p.icon+' จุดที่ '+p.no+' — '+esc(p.status)+'</h4>'+
+ '<b>ชั้น/ระบบ:</b> '+esc(p.floor)+' · '+esc(p.sys)+'<br><b>Drawing:</b> '+esc(p.dwg)+' (หน้า '+esc(p.page)+')<br>'+
+ '<b>ตำแหน่ง:</b> '+esc(p.loc)+'<br><b>รายละเอียดงาน:</b> '+esc(p.detail)+'<br><b>ในกรอบแดง:</b> '+esc(p.red)+'<br>'+
+ '<b>ผู้รับผิดชอบ:</b> '+esc(p.owner)+'<br><b>กำหนด:</b> '+esc(p.start)+' → '+esc(p.due)+' ('+esc(p.days)+')<br>'+
+ '<b>หมายเหตุ:</b> '+esc(p.note||'–');
+ card.querySelector('.x').onclick=function(e){e.stopPropagation();card.style.display='none';};}
+function build(){PTS.forEach(function(p){var m=document.createElement('div');m.className='mk';m.style.left=p.x+'%';m.style.top=p.y+'%';m.style.background=p.color;m.textContent=p.no;
+ m.onmouseenter=function(){bar.style.display='block';bar.innerHTML='<b>จุดที่ '+p.no+'</b> · '+p.icon+' '+esc(p.status)+' · '+esc(p.owner)+' · ครบ '+esc(p.due)+' ('+esc(p.days)+')';};
+ m.onmouseleave=function(){bar.style.display='none';};
+ m.onclick=function(e){e.stopPropagation();showCard(p);};stage.appendChild(m);});}
+function initFit(){var ww=wrap.clientWidth,wh=wrap.clientHeight,iw=plan.naturalWidth,ih=plan.naturalHeight;if(!iw)return;var dw=ww,dh=ww*ih/iw;stage.style.width=dw+'px';stage.style.height=dh+'px';plan.style.width=dw+'px';plan.style.height=dh+'px';var s=Math.min(1,wh/dh);scale=s;tx=(ww-dw*s)/2;ty=(wh-dh*s)/2;apply();}
+plan.onload=initFit;if(plan.complete)initFit();
+function zoomAt(cx,cy,f){var ns=Math.min(9,Math.max(0.4,scale*f)),r=ns/scale;tx=cx-(cx-tx)*r;ty=cy-(cy-ty)*r;scale=ns;apply();}
+wrap.addEventListener('wheel',function(e){e.preventDefault();var b=wrap.getBoundingClientRect();zoomAt(e.clientX-b.left,e.clientY-b.top,e.deltaY<0?1.15:1/1.15);},{passive:false});
+document.getElementById('zin').onclick=function(){zoomAt(wrap.clientWidth/2,wrap.clientHeight/2,1.3);};
+document.getElementById('zout').onclick=function(){zoomAt(wrap.clientWidth/2,wrap.clientHeight/2,1/1.3);};
+document.getElementById('zr').onclick=initFit;
+var drag=false,px2,py2;
+wrap.addEventListener('pointerdown',function(e){if(e.target.classList&&e.target.classList.contains('mk'))return;drag=true;px2=e.clientX;py2=e.clientY;try{wrap.setPointerCapture(e.pointerId);}catch(_){}});
+wrap.addEventListener('pointermove',function(e){if(!drag)return;tx+=e.clientX-px2;ty+=e.clientY-py2;px2=e.clientX;py2=e.clientY;apply();});
+wrap.addEventListener('pointerup',function(){drag=false;});
+wrap.addEventListener('click',function(){card.style.display='none';});
+build();
+</script>"""
+def build_plan_html(img_url, pts, height=640):
+    import json as _j
+    return _PLAN_TPL.replace("__H__",str(height)).replace("__IMG__",img_url).replace("__PTS__",_j.dumps(pts,ensure_ascii=False))
+
 @st.cache_data(ttl=60, show_spinner=False)
 def load_raw():
     """คืน (DataFrame ดิบตามหัวตาราง, โหมด)"""
@@ -423,7 +495,7 @@ st.plotly_chart(month_stacked(df), use_container_width=True, config={"displayMod
 st.divider()
 
 # ---- tabs: table / image viewer / edit ----
-tab1,tab2,tab3=st.tabs(["📋 ตารางรายการ","🖼️ ดูรูปแบบรายจุด","✏️ แก้ไขข้อมูล"])
+tab1,tab2,tab_plan,tab3=st.tabs(["📋 ตารางรายการ","🖼️ ดูรูปแบบรายจุด","🗺️ แบบแปลนติดจุด","✏️ แก้ไขข้อมูล"])
 
 with tab1:
     f=st.columns([3,1.3,1.3,1.3,1.3])
@@ -562,6 +634,34 @@ with tab2:
                         except Exception as e:
                             st.error(f"ลบไม่สำเร็จ: {e}")
             st.caption("รูปถูกบีบให้เล็กก่อนเก็บในชีต (แท็บ \"รูปงานเสร็จ\") · เก็บรูปมากอาจทำให้ชีตโหลดช้าลง")
+
+with tab_plan:
+    meta=load_plans_meta()
+    if not meta.get("plans"):
+        st.info("ยังไม่มีข้อมูลแบบแปลนติดจุด")
+    else:
+        opts={f"{p['file']} · หน้า {p['page']}  ({len(p['nos'])} จุด: {', '.join(map(str,p['nos']))})":p for p in meta["plans"]}
+        lab=st.selectbox("เลือกแบบแปลน (เฉพาะหน้าที่มีจุด)", list(opts.keys()), key="plansel")
+        plan=opts[lab]
+        dmap={int(r[C_NO]):r for _,r in df.iterrows() if str(r[C_NO]).strip() not in ("","nan")}
+        pts=[]
+        for no in plan["nos"]:
+            pos=meta["points"].get(str(no)); row=dmap.get(no)
+            if not pos or row is None: continue
+            mm=STATUS_META.get(str(row[C_STATUS]).strip(),{})
+            pts.append({"no":no,"x":pos["x"],"y":pos["y"],
+                "color":mm.get("color","#8a8a86"),"icon":mm.get("icon","⚪"),
+                "status":str(row[C_STATUS]),"floor":str(row[C_FLOOR]),"sys":str(row[C_SYS]),
+                "dwg":str(row[C_DWG]),"page":str(row[C_PAGE]),"loc":str(row[C_LOC]),
+                "detail":str(row[C_DETAIL]),"red":str(row[C_RED]),"owner":str(row[C_OWNER]),
+                "start":str(row[C_START]),"due":str(row[C_DUE]),"days":fmt_days(row),
+                "note":str(row[C_NOTE] or "")})
+        cc=st.columns([3,1])
+        cc[0].caption("🖱️ ชี้หมุด = สรุปเร็ว · แตะหมุด = รายละเอียดเต็ม · ลาก/ล้อเมาส์ = เลื่อน-ซูม · สีหมุด = สถานะ")
+        cc[1].caption(f"🔴 {sum(1 for p in pts if p['color']=='#d03b3b')}  🟡 {sum(1 for p in pts if p['color']=='#fab219')}  ⚪ {sum(1 for p in pts if p['color']=='#8a8a86')}")
+        import streamlit.components.v1 as components
+        components.html(build_plan_html(plan_img_url(plan["key"]), pts, height=640), height=662, scrolling=False)
+        st.caption("รูปแบบเต็มหน้าที่มีจุด (จากไฟล์ Punchlist R1) · ตำแหน่งหมุดคำนวณจากเลขวงกลมแดงในแบบ · ข้อมูลจุดดึงสดจาก Google Sheet")
 
 with tab3:
     st.caption("แก้ไขข้อมูลได้เลย · เพิ่ม/ลบแถวได้ (ปุ่ม + ด้านล่าง / เลือกแถวแล้วลบ) แล้วกด \"บันทึก\" (ต้องใส่ PIN)")
