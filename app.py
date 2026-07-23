@@ -229,6 +229,88 @@ def fmt_days(r):
     if r["_skey"]=="crit" or d<0: return f"เลย {abs(d)} วัน"
     return f"{d} วัน"
 
+# ---- ตรวจความต่างก่อนบันทึก (diff) + กล่องยืนยัน ----
+def _canon_no(v):
+    s="" if v is None else str(v).strip()
+    if s.lower() in ("","nan","none"): return ""
+    try:
+        f=float(s); return str(int(f)) if f==int(f) else str(f)
+    except Exception:
+        return s
+
+def _cellval(v):
+    s="" if v is None else str(v).strip()
+    return "" if s.lower()=="nan" else s
+
+def _same(a,b):
+    a=_cellval(a); b=_cellval(b)
+    if a==b: return True
+    try: return float(a)==float(b)
+    except Exception: return False
+
+def _s(v):
+    if v is None: return ""
+    if isinstance(v,float):
+        if v!=v: return ""            # NaN
+        if v==int(v): return str(int(v))
+        return str(v)
+    s=str(v); return "" if s.lower()=="nan" else s
+
+def compute_diff(before, after):
+    def as_map(df):
+        m={}
+        for _,r in df.iterrows():
+            k=_canon_no(r.get(C_NO,""))
+            if k: m[k]=r
+        return m
+    bm=as_map(before); am=as_map(after)
+    bkeys, akeys = set(bm), set(am)
+    kf=lambda x: (0,float(x)) if x.replace('.','',1).isdigit() else (1,x)
+    added=sorted(akeys-bkeys, key=kf)
+    deleted=sorted(bkeys-akeys, key=kf)
+    mods=[]
+    for k in sorted(akeys & bkeys, key=kf):
+        ch=[(c,_cellval(bm[k].get(c,"")),_cellval(am[k].get(c,"")))
+            for c in ALL_COLS if not _same(bm[k].get(c,""), am[k].get(c,""))]
+        if ch: mods.append((k,ch))
+    return {"added":added,"deleted":deleted,"mods":mods,
+            "n_add":len(added),"n_del":len(deleted),"n_mod":len(mods)}
+
+@st.dialog("ยืนยันการแก้ไขก่อนบันทึก")
+def confirm_save_dialog():
+    diff=st.session_state.get("_pending_diff"); out=st.session_state.get("_pending_edited")
+    if diff is None or out is None:
+        st.write("ไม่มีข้อมูลรอบันทึก"); return
+    st.markdown(f"ตรวจการเปลี่ยนแปลงก่อนเขียนกลับ Google Sheet — "
+                f"**➕ เพิ่ม {diff['n_add']} · 🗑️ ลบ {diff['n_del']} · ✏️ แก้ไข {diff['n_mod']} แถว**")
+    if diff["added"]:
+        st.markdown("**➕ เพิ่มจุดใหม่:** "+", ".join(f"จุดที่ {k}" for k in diff["added"]))
+    if diff["deleted"]:
+        st.markdown("**🗑️ ลบจุด:** "+", ".join(f"จุดที่ {k}" for k in diff["deleted"]))
+    if diff["mods"]:
+        st.markdown("**✏️ แก้ไขรายจุด:**")
+        for i,(k,ch) in enumerate(diff["mods"]):
+            if i>=25:
+                st.caption(f"… และอีก {len(diff['mods'])-25} แถว"); break
+            lines="; ".join(f"{c}: “{ov or '—'}” → “{nv or '—'}”" for c,ov,nv in ch)
+            st.markdown(f"- **จุดที่ {k}** — {lines}")
+    st.divider()
+    c1,c2=st.columns(2)
+    if c1.button("✅ ยืนยันบันทึก", type="primary", use_container_width=True):
+        try:
+            ws=get_ws()
+            values=[list(out.columns)]+[[_s(v) for v in row] for row in out.values.tolist()]
+            ws.clear(); ws.update(values=values, range_name="A1")
+            st.cache_data.clear()
+            st.session_state["_saved_rows"]=len(out)
+            for kk in ("_pending_diff","_pending_edited","_show_confirm"): st.session_state.pop(kk,None)
+            st.rerun()
+        except Exception as e:
+            st.error(f"บันทึกไม่สำเร็จ: {e}")
+    if c2.button("✖ ยกเลิก", use_container_width=True):
+        for kk in ("_pending_diff","_pending_edited","_show_confirm"): st.session_state.pop(kk,None)
+        st.rerun()
+
 # ----------------------------------------------------------------------------
 # Charts
 # ----------------------------------------------------------------------------
@@ -499,19 +581,21 @@ with tab3:
         ws=get_ws() if mode=="gsheet" else None
         if ws is None:
             st.error("ยังไม่ได้เชื่อม Google Sheet — ตั้งค่า service account ก่อน (README ข้อ 2)")
-        elif str(pin)!=str(sget("edit_pin","")) or sget("edit_pin","")=="":
+        elif pin_bad(pin):
             st.error("PIN ไม่ถูกต้อง (หรือยังไม่ได้ตั้ง edit_pin ใน Secrets)")
         else:
-            try:
-                out=edited.copy()
-                out=out[out[C_NO].astype(str).str.strip()!=""]
-                values=[list(out.columns)]+out.fillna("").astype(str).values.tolist()
-                ws.clear(); ws.update(values=values, range_name="A1")
-                st.cache_data.clear()
-                st.session_state["_saved_rows"]=len(out)   # ให้ pop-up เด้งหลัง rerun
+            out=edited.copy()
+            out=out[out[C_NO].map(lambda v:_canon_no(v)!="")]
+            diff=compute_diff(raw, out)
+            if diff["n_add"]==0 and diff["n_del"]==0 and diff["n_mod"]==0:
+                st.info("ไม่มีการเปลี่ยนแปลงให้บันทึก")
+            else:
+                st.session_state["_pending_edited"]=out
+                st.session_state["_pending_diff"]=diff
+                st.session_state["_show_confirm"]=True
                 st.rerun()
-            except Exception as e:
-                st.error(f"บันทึกไม่สำเร็จ: {e}")
+    if st.session_state.get("_show_confirm"):
+        confirm_save_dialog()
 
 st.divider()
 st.caption("ที่มา: 2026-07-22_Punchlist_MRT_PP18_R1.xlsx · คอลัมน์ \"เหลือ (วัน)\" คำนวณสดจากวันปัจจุบัน (เขต Asia/Bangkok) · รูปแบบราย จุดฝังในโปรเจกต์ (โฟลเดอร์ images/)")
