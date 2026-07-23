@@ -466,8 +466,8 @@ scount={s:int((df[C_STATUS].astype(str).str.strip()==s).sum()) for s in STATUS_O
 c_soon=int(((~df["_skey"].isin(["crit","done"])) & (df["_days"].apply(lambda x: x is not None and not pd.isna(x) and 0<=x<=7))).sum())
 k=st.columns(1+len(STATUS_ORDER))
 k[0].metric("ทั้งหมด", tot)
-for _i,_s in enumerate(STATUS_ORDER):
-    _m=STATUS_META[_s]; k[_i+1].metric(f"{_m['icon']} {_m['short']}", scount[_s])
+for _ki,_ks in enumerate(STATUS_ORDER):
+    _km=STATUS_META[_ks]; k[_ki+1].metric(f"{_km['icon']} {_km['short']}", scount[_ks])
 st.caption(f"⏰ ครบกำหนดใน 7 วัน (ยังไม่จบงาน): {c_soon} จุด")
 
 st.divider()
