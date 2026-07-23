@@ -3,7 +3,7 @@
 Punchlist Dashboard — สถานี PP18 SI YAN (MRT สายสีม่วง, Contract 1) · R1
 Streamlit app: อ่าน/แก้ข้อมูลจาก Google Sheet แบบ near real-time + ดูรูปแบบราย จุด
 """
-import os
+import os, io, base64
 from datetime import datetime, timezone, timedelta
 import pandas as pd
 import streamlit as st
@@ -66,6 +66,63 @@ def get_ws():
         try: return sh.worksheet(wsname)
         except Exception: return sh.sheet1
     return None
+
+# ---- รูปแทน (upload) : เก็บรูปที่อัปโหลดเป็น base64 (แบ่งหลายเซลล์) ในแท็บซ่อนของ Google Sheet ----
+OVERRIDE_WS = "รูปแทน"
+CHUNK = 45000        # Google Sheet จำกัด ~50,000 ตัวอักษร/เซลล์
+MAXCH = 6            # สูงสุด 6 เซลล์/รูป (~270k = รูปคมชัดได้)
+_LASTCOL = chr(ord('A')+MAXCH)   # 'G'
+
+def _to_chunks(b64):
+    ch=[b64[i:i+CHUNK] for i in range(0,len(b64),CHUNK)]
+    return (ch+[""]*MAXCH)[:MAXCH]
+
+@st.cache_data(ttl=60, show_spinner=False)
+def load_overrides():
+    """คืน dict {ลำดับจุด: base64jpg} ของรูปที่อัปโหลดทับไว้ (ถ้าไม่มีแท็บ = {})"""
+    try:
+        ws=get_ws()
+        if ws is None: return {}
+        try: ows=ws.spreadsheet.worksheet(OVERRIDE_WS)
+        except Exception: return {}
+        out={}
+        for r in ows.get_all_values()[1:]:
+            if r and str(r[0]).strip().isdigit():
+                b="".join(r[1:1+MAXCH]).strip()
+                if b: out[int(r[0])]=b
+        return out
+    except Exception:
+        return {}
+
+def compress_to_b64(data, maxw=1000):
+    """ย่อ + บีบ JPEG ให้ base64 พอดี ≤ MAXCH เซลล์ โดยคงคุณภาพให้อ่านแบบได้"""
+    from PIL import Image
+    img=Image.open(io.BytesIO(data)).convert("RGB")
+    w,h=img.size
+    if w>maxw: img=img.resize((maxw,int(h*maxw/w)), Image.LANCZOS)
+    limit=CHUNK*MAXCH
+    for q in (85,78,70,60,50,40):
+        buf=io.BytesIO(); img.save(buf,format="JPEG",quality=q,optimize=True)
+        b=base64.b64encode(buf.getvalue()).decode()
+        if len(b)<=limit: return b
+    img=img.resize((800,int(img.size[1]*800/img.size[0])), Image.LANCZOS)
+    buf=io.BytesIO(); img.save(buf,format="JPEG",quality=45,optimize=True)
+    return base64.b64encode(buf.getvalue()).decode()
+
+def save_override(no, b64):
+    ws=get_ws(); sh=ws.spreadsheet
+    try: ows=sh.worksheet(OVERRIDE_WS)
+    except Exception:
+        ows=sh.add_worksheet(title=OVERRIDE_WS, rows=200, cols=MAXCH+1)
+        ows.update(values=[["ลำดับ"]+[f"b64_{i+1}" for i in range(MAXCH)]], range_name="A1")
+    row=[str(no)]+_to_chunks(b64)     # กว้างคงที่ MAXCH+1 → เขียนทับล้างของเก่าเสมอ
+    col=ows.col_values(1); rowidx=None
+    for i,v in enumerate(col[1:], start=2):
+        if str(v).strip()==str(no): rowidx=i; break
+    if rowidx is None:
+        ows.append_row(row, value_input_option="RAW")
+    else:
+        ows.update(values=[row], range_name=f"A{rowidx}:{_LASTCOL}{rowidx}")
 
 @st.cache_data(ttl=60, show_spinner=False)
 def load_raw():
@@ -166,6 +223,9 @@ if _saved is not None:
     st.toast(f"บันทึกกลับ Google Sheet สำเร็จ ({_saved} แถว) ✓", icon="✅")
     try: st.balloons()
     except Exception: pass
+_imgsaved = st.session_state.pop("_img_saved", None)
+if _imgsaved is not None:
+    st.toast(f"อัปเดตรูปของจุดที่ {_imgsaved} แล้ว ✓", icon="🖼️")
 
 # ---- header ----
 left,right=st.columns([4,1])
@@ -249,11 +309,41 @@ with tab2:
     nos=sorted(df[C_NO].dropna().astype(int).tolist())
     sel=st.selectbox("เลือกจุด", nos, format_func=lambda n:f"จุดที่ {n}")
     row=df[df[C_NO]==sel].iloc[0]
+    ov = load_overrides()
     cimg,cinfo=st.columns([2,1])
     with cimg:
         p=os.path.join(APP_DIR,"images",f"{sel}.jpg")
-        if os.path.exists(p): st.image(p, use_container_width=True)
-        else: st.info("ไม่มีรูปแบบสำหรับจุดนี้ (จุดที่เพิ่มใหม่)")
+        if sel in ov:
+            try:
+                st.image(base64.b64decode(ov[sel]), use_container_width=True)
+                st.caption("🖼️ รูปที่อัปโหลดทับไว้")
+            except Exception:
+                if os.path.exists(p): st.image(p, use_container_width=True)
+        elif os.path.exists(p):
+            st.image(p, use_container_width=True)
+        else:
+            st.info("ไม่มีรูปแบบสำหรับจุดนี้ (จุดที่เพิ่มใหม่)")
+        with st.expander(f"📤 อัปโหลด / เปลี่ยนรูปของจุดที่ {sel}"):
+            if mode!="gsheet":
+                st.caption("อัปโหลดได้เมื่อเชื่อม Google Sheet (โหมดแก้ไข) — ตอนนี้เป็นโหมดดูอย่างเดียว")
+            else:
+                up=st.file_uploader("เลือกรูปใหม่ (PNG/JPG)", type=["png","jpg","jpeg"], key=f"up_{sel}")
+                cpin,cbtn=st.columns([2,1])
+                pin2=cpin.text_input("PIN", type="password", key=f"uppin_{sel}", label_visibility="collapsed", placeholder="ใส่ PIN เพื่อบันทึก")
+                if cbtn.button("💾 บันทึกรูป", key=f"upbtn_{sel}", use_container_width=True):
+                    if up is None:
+                        st.warning("ยังไม่ได้เลือกรูป")
+                    elif str(pin2)!=str(sget("edit_pin","")) or sget("edit_pin","")=="":
+                        st.error("PIN ไม่ถูกต้อง")
+                    else:
+                        try:
+                            save_override(sel, compress_to_b64(up.getvalue()))
+                            st.cache_data.clear()
+                            st.session_state["_img_saved"]=sel
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"อัปโหลดไม่สำเร็จ: {e}")
+                st.caption("รูปจะถูกบีบให้เล็กลงเพื่อเก็บในชีต แล้วแทนรูปเดิมของจุดนี้ทันที")
     with cinfo:
         meta=STATUS_META.get(row[C_STATUS],{})
         st.markdown(f"**จุดที่ {sel}** — {meta.get('icon','')} {meta.get('short',row[C_STATUS])}")
