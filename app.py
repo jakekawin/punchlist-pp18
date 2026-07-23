@@ -21,11 +21,14 @@ C_DONE="วันที่เสร็จจริง"; C_NOTE="หมายเ�
 ALL_COLS=[C_NO,C_FLOOR,C_SYS,C_DWGF,C_DWG,C_PAGE,C_RED,C_OWNER,C_START,C_DUE,
           C_LOC,C_DETAIL,C_STATUS,C_DONE,C_NOTE]
 
-STATUS_ORDER=["เลยกำหนด–รอตรวจสอบ","กำลังดำเนินการ","รอดำเนินการ"]
+STATUS_ORDER=["เลยกำหนด–รอตรวจสอบ","กำลังดำเนินการ","รอเชื่อม","รอวัสดุ","รอดำเนินการ","จบงาน"]
 STATUS_META={
  "เลยกำหนด–รอตรวจสอบ":{"key":"crit","color":"#d03b3b","icon":"🔴","short":"เลยกำหนด"},
  "กำลังดำเนินการ":{"key":"warn","color":"#fab219","icon":"🟡","short":"กำลังดำเนินการ"},
+ "รอเชื่อม":{"key":"conn","color":"#2f7fd1","icon":"🔵","short":"รอเชื่อม"},
+ "รอวัสดุ":{"key":"matl","color":"#9b59b6","icon":"🟣","short":"รอวัสดุ"},
  "รอดำเนินการ":{"key":"neut","color":"#8a8a86","icon":"⚪","short":"รอดำเนินการ"},
+ "จบงาน":{"key":"done","color":"#1f9d57","icon":"✅","short":"จบงาน"},
 }
 FLOOR_ORDER=["Multipurpose","Concourse","Upper Platform"]
 FLOOR_COLOR={"Multipurpose":"#2a78d6","Concourse":"#eb6834","Upper Platform":"#1baf7a"}
@@ -295,6 +298,7 @@ def enrich(df):
     return df
 
 def fmt_days(r):
+    if r["_skey"]=="done": return "จบงานแล้ว"
     d=r["_days"]
     if d is None or pd.isna(d): return "–"
     d=int(d)
@@ -458,14 +462,13 @@ with right:
 
 # ---- KPIs ----
 tot=len(df)
-c_crit=int((df["_skey"]=="crit").sum()); c_warn=int((df["_skey"]=="warn").sum()); c_neut=int((df["_skey"]=="neut").sum())
-c_soon=int(((df["_skey"]!="crit") & (df["_days"].apply(lambda x: x is not None and not pd.isna(x) and 0<=x<=7))).sum())
-k=st.columns(5)
+scount={s:int((df[C_STATUS].astype(str).str.strip()==s).sum()) for s in STATUS_ORDER}
+c_soon=int(((~df["_skey"].isin(["crit","done"])) & (df["_days"].apply(lambda x: x is not None and not pd.isna(x) and 0<=x<=7))).sum())
+k=st.columns(1+len(STATUS_ORDER))
 k[0].metric("ทั้งหมด", tot)
-k[1].metric("🔴 เลยกำหนด", c_crit)
-k[2].metric("🟡 กำลังดำเนินการ", c_warn)
-k[3].metric("⚪ รอดำเนินการ", c_neut)
-k[4].metric("⏰ ครบกำหนดใน 7 วัน", c_soon)
+for _i,_s in enumerate(STATUS_ORDER):
+    _m=STATUS_META[_s]; k[_i+1].metric(f"{_m['icon']} {_m['short']}", scount[_s])
+st.caption(f"⏰ ครบกำหนดใน 7 วัน (ยังไม่จบงาน): {c_soon} จุด")
 
 st.divider()
 
@@ -658,7 +661,9 @@ with tab_plan:
                 "note":str(row[C_NOTE] or "")})
         cc=st.columns([3,1])
         cc[0].caption("🖱️ ชี้หมุด = สรุปเร็ว · แตะหมุด = รายละเอียดเต็ม · ลาก/ล้อเมาส์ = เลื่อน-ซูม · สีหมุด = สถานะ")
-        cc[1].caption(f"🔴 {sum(1 for p in pts if p['color']=='#d03b3b')}  🟡 {sum(1 for p in pts if p['color']=='#fab219')}  ⚪ {sum(1 for p in pts if p['color']=='#8a8a86')}")
+        _cnt={}
+        for p in pts: _cnt[p['status']]=_cnt.get(p['status'],0)+1
+        cc[1].caption("  ".join(f"{STATUS_META[s]['icon']} {_cnt[s]}" for s in STATUS_ORDER if _cnt.get(s)))
         import streamlit.components.v1 as components
         components.html(build_plan_html(plan_img_url(plan["key"]), pts, height=640), height=662, scrolling=False)
         st.caption("รูปแบบเต็มหน้าที่มีจุด (จากไฟล์ Punchlist R1) · ตำแหน่งหมุดคำนวณจากเลขวงกลมแดงในแบบ · ข้อมูลจุดดึงสดจาก Google Sheet")
