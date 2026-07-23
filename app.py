@@ -233,8 +233,8 @@ function build(){PTS.forEach(function(p){var m=document.createElement('div');m.c
  m.onmouseenter=function(){bar.style.display='block';bar.innerHTML='<b>จุดที่ '+p.no+'</b> · '+p.icon+' '+esc(p.status)+' · '+esc(p.owner)+' · ครบ '+esc(p.due)+' ('+esc(p.days)+')';};
  m.onmouseleave=function(){bar.style.display='none';};
  m.onclick=function(e){e.stopPropagation();showCard(p);};stage.appendChild(m);});}
-function initFit(){var ww=wrap.clientWidth,wh=wrap.clientHeight,iw=plan.naturalWidth,ih=plan.naturalHeight;if(!iw)return;var dw=ww,dh=ww*ih/iw;stage.style.width=dw+'px';stage.style.height=dh+'px';plan.style.width=dw+'px';plan.style.height=dh+'px';var s=Math.min(1,wh/dh);scale=s;tx=(ww-dw*s)/2;ty=(wh-dh*s)/2;apply();}
-plan.onload=initFit;if(plan.complete)initFit();
+function initFit(){var ww=wrap.clientWidth,wh=wrap.clientHeight,iw=plan.naturalWidth,ih=plan.naturalHeight;if(!iw||!ww){return requestAnimationFrame(initFit);}var dw=ww,dh=ww*ih/iw;stage.style.width=dw+'px';stage.style.height=dh+'px';plan.style.width=dw+'px';plan.style.height=dh+'px';var s=Math.min(1,wh/dh);scale=s;tx=(ww-dw*s)/2;ty=(wh-dh*s)/2;apply();}
+plan.onload=initFit;initFit();
 function zoomAt(cx,cy,f){var ns=Math.min(9,Math.max(0.4,scale*f)),r=ns/scale;tx=cx-(cx-tx)*r;ty=cy-(cy-ty)*r;scale=ns;apply();}
 wrap.addEventListener('wheel',function(e){e.preventDefault();var b=wrap.getBoundingClientRect();zoomAt(e.clientX-b.left,e.clientY-b.top,e.deltaY<0?1.15:1/1.15);},{passive:false});
 document.getElementById('zin').onclick=function(){zoomAt(wrap.clientWidth/2,wrap.clientHeight/2,1.3);};
