@@ -124,6 +124,61 @@ def save_override(no, b64):
     else:
         ows.update(values=[row], range_name=f"A{rowidx}:{_LASTCOL}{rowidx}")
 
+# ---- รูปหลักฐานงานเสร็จหน้างาน : เก็บได้หลายรูป/จุด เป็น base64 ในแท็บ "รูปงานเสร็จ" ----
+DONE_WS = "รูปงานเสร็จ"
+DONE_HEADERS = ["ลำดับ","id","วันที่","หมายเหตุ"] + [f"b64_{i+1}" for i in range(MAXCH)]
+DONE_NCOL = len(DONE_HEADERS)
+DONE_LASTCOL = chr(ord('A')+DONE_NCOL-1)
+
+def pin_bad(p):
+    ep=sget("edit_pin","")
+    return ep=="" or str(p)!=str(ep)
+
+def _bkk_stamp():
+    return (datetime.now(timezone.utc)+timedelta(hours=7)).strftime("%Y%m%d%H%M%S%f")
+
+@st.cache_data(ttl=60, show_spinner=False)
+def load_done_photos():
+    """คืน dict {ลำดับจุด: [ {id,date,note,b64}, ... ]} ของรูปงานเสร็จหน้างาน"""
+    out={}
+    try:
+        ws=get_ws()
+        if ws is None: return out
+        try: dws=ws.spreadsheet.worksheet(DONE_WS)
+        except Exception: return out
+        for r in dws.get_all_values()[1:]:
+            if not r or not str(r[0]).strip().isdigit(): continue
+            b="".join(r[4:4+MAXCH]).strip() if len(r)>4 else ""
+            if not b: continue
+            out.setdefault(int(r[0]),[]).append({
+                "id":(r[1] if len(r)>1 else "").strip(),
+                "date":(r[2] if len(r)>2 else "").strip(),
+                "note":(r[3] if len(r)>3 else "").strip(),
+                "b64":b,
+            })
+    except Exception:
+        pass
+    return out
+
+def save_done_photo(no, b64, note=""):
+    ws=get_ws(); sh=ws.spreadsheet
+    try: dws=sh.worksheet(DONE_WS)
+    except Exception:
+        dws=sh.add_worksheet(title=DONE_WS, rows=400, cols=DONE_NCOL)
+        dws.update(values=[DONE_HEADERS], range_name="A1")
+    pid=_bkk_stamp()
+    row=[str(no),pid,bkk_today().strftime("%Y-%m-%d"),str(note)[:200]]+_to_chunks(b64)
+    dws.append_row(row, value_input_option="RAW")
+    return pid
+
+def del_done_photo(no, pid):
+    ws=get_ws(); sh=ws.spreadsheet
+    try: dws=sh.worksheet(DONE_WS)
+    except Exception: return
+    for i,r in enumerate(dws.get_all_values()[1:], start=2):
+        if str(r[0]).strip()==str(no) and len(r)>1 and str(r[1]).strip()==str(pid):
+            dws.delete_rows(i); return
+
 @st.cache_data(ttl=60, show_spinner=False)
 def load_raw():
     """คืน (DataFrame ดิบตามหัวตาราง, โหมด)"""
@@ -226,6 +281,15 @@ if _saved is not None:
 _imgsaved = st.session_state.pop("_img_saved", None)
 if _imgsaved is not None:
     st.toast(f"อัปเดตรูปของจุดที่ {_imgsaved} แล้ว ✓", icon="🖼️")
+_dsaved = st.session_state.pop("_done_saved", None)
+if _dsaved is not None:
+    _no,_n=_dsaved
+    st.toast(f"บันทึกรูปงานเสร็จของจุดที่ {_no} แล้ว ({_n} รูป) ✓", icon="📷")
+    try: st.balloons()
+    except Exception: pass
+_ddel = st.session_state.pop("_done_del", None)
+if _ddel is not None:
+    st.toast(f"ลบรูปงานเสร็จของจุดที่ {_ddel} แล้ว", icon="🗑️")
 
 # ---- header ----
 left,right=st.columns([4,1])
@@ -307,9 +371,11 @@ with tab1:
 
 with tab2:
     nos=sorted(df[C_NO].dropna().astype(int).tolist())
-    sel=st.selectbox("เลือกจุด", nos, format_func=lambda n:f"จุดที่ {n}")
-    row=df[df[C_NO]==sel].iloc[0]
     ov = load_overrides()
+    donep = load_done_photos()
+    sel=st.selectbox("เลือกจุด", nos,
+        format_func=lambda n:f"จุดที่ {n}"+(f"  📷×{len(donep.get(n,[]))}" if donep.get(n) else ""))
+    row=df[df[C_NO]==sel].iloc[0]
     cimg,cinfo=st.columns([2,1])
     with cimg:
         p=os.path.join(APP_DIR,"images",f"{sel}.jpg")
@@ -357,6 +423,63 @@ with tab2:
 - **กำหนด:** {row[C_START]} → {row[C_DUE]}  ({fmt_days(row)})
 - **หมายเหตุ:** {row[C_NOTE] or '–'}
 """)
+
+    # ---- รูปหลักฐานงานเสร็จหน้างาน (เก็บได้หลายรูป/จุด) ----
+    st.divider()
+    mine = donep.get(int(sel), [])
+    st.markdown(f"##### 📷 รูปงานเสร็จหน้างาน — จุดที่ {sel}  ({len(mine)} รูป)")
+    if mine:
+        gc=st.columns(4)
+        for i,ph in enumerate(mine):
+            with gc[i%4]:
+                try:
+                    st.image(base64.b64decode(ph["b64"]), use_container_width=True,
+                             caption=f"{ph['date']}"+(f" · {ph['note']}" if ph['note'] else ""))
+                except Exception:
+                    st.caption("(รูปเสียหาย)")
+    else:
+        st.caption("ยังไม่มีรูปงานเสร็จของจุดนี้ — อัปโหลดหลักฐานงานที่แก้เสร็จได้ในกล่องด้านล่าง")
+    with st.expander(f"➕ เพิ่ม / จัดการรูปงานเสร็จของจุดที่ {sel}"):
+        if mode!="gsheet":
+            st.caption("อัปโหลดได้เมื่อเชื่อม Google Sheet (โหมดแก้ไข) — ตอนนี้เป็นโหมดดูอย่างเดียว")
+        else:
+            dpin=st.text_input("PIN", type="password", key=f"dpin_{sel}",
+                               placeholder="ใส่ PIN เพื่อเพิ่ม/ลบรูป", label_visibility="collapsed")
+            st.markdown("**เพิ่มรูป** (เลือกได้หลายรูปพร้อมกัน)")
+            ups=st.file_uploader("รูปงานเสร็จ (PNG/JPG)", type=["png","jpg","jpeg"],
+                                 accept_multiple_files=True, key=f"dup_{sel}")
+            dnote=st.text_input("หมายเหตุ (ไม่บังคับ)", key=f"dnote_{sel}",
+                                placeholder="เช่น เก็บงานเสร็จ 23/07, ผู้ตรวจ …")
+            if st.button("💾 บันทึกรูปงานเสร็จ", key=f"dbtn_{sel}", use_container_width=True):
+                if not ups:
+                    st.warning("ยังไม่ได้เลือกรูป")
+                elif pin_bad(dpin):
+                    st.error("PIN ไม่ถูกต้อง")
+                else:
+                    try:
+                        n=0
+                        for uf in ups:
+                            save_done_photo(sel, compress_to_b64(uf.getvalue()), dnote); n+=1
+                        st.cache_data.clear()
+                        st.session_state["_done_saved"]=(sel,n)
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"บันทึกไม่สำเร็จ: {e}")
+            if mine:
+                st.markdown("**ลบรูป**")
+                opt={f"{i+1}. {ph['date']}"+(f" · {ph['note']}" if ph['note'] else ""):ph["id"]
+                     for i,ph in enumerate(mine)}
+                dsel=st.selectbox("เลือกรูปที่จะลบ", list(opt.keys()), key=f"delsel_{sel}")
+                if st.button("🗑️ ลบรูปนี้", key=f"delbtn_{sel}"):
+                    if pin_bad(dpin):
+                        st.error("PIN ไม่ถูกต้อง")
+                    else:
+                        try:
+                            del_done_photo(sel, opt[dsel]); st.cache_data.clear()
+                            st.session_state["_done_del"]=sel; st.rerun()
+                        except Exception as e:
+                            st.error(f"ลบไม่สำเร็จ: {e}")
+            st.caption("รูปถูกบีบให้เล็กก่อนเก็บในชีต (แท็บ \"รูปงานเสร็จ\") · เก็บรูปมากอาจทำให้ชีตโหลดช้าลง")
 
 with tab3:
     st.caption("แก้ไขข้อมูลได้เลย · เพิ่ม/ลบแถวได้ (ปุ่ม + ด้านล่าง / เลือกแถวแล้วลบ) แล้วกด \"บันทึก\" (ต้องใส่ PIN)")
