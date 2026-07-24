@@ -427,6 +427,99 @@ def month_stacked(df):
 # ----------------------------------------------------------------------------
 # UI
 # ----------------------------------------------------------------------------
+# ---- เมนูหลัก (hub) : เข้าเว็บเจอเมนูเลือกงานก่อน แล้วลิงก์เข้าแต่ละส่วน ----
+def _goto(v):
+    st.session_state["view"]=v; st.rerun()
+
+MENU_APPS=[
+ {"icon":"📋","title":"Punchlist PP18 SI YAN","desc":"ติดตามงานตามกรอบสีแดง 51 จุด — ตาราง · รูปแบบ · แบบแปลนติดจุด · แก้ไขข้อมูล","view":"punchlist","tag":"พร้อมใช้","ready":True},
+ {"icon":"🧰","title":"งานคงเหลือ (Remaining Work)","desc":"แผนงานระบบที่ยังเหลือ — ไทม์ไลน์ Gantt · ตารางกรอง · แบบแปลนโซน 5 ชั้น (ต้องใส่ PIN)","view":"remaining","tag":"กำลังปรับปรุง","ready":True},
+ {"icon":"➕","title":"เพิ่มงานถัดไป…","desc":"ช่องสำหรับงานส่วนใหม่ในอนาคต (เพิ่มการ์ดในเมนูได้เรื่อยๆ)","view":None,"tag":"เร็วๆ นี้","ready":False},
+]
+
+def render_menu():
+    st.markdown("""<style>
+    .hubic{font-size:32px;line-height:1;} .hubt{font-weight:700;font-size:17px;margin:8px 0 5px;color:#1a1a1a;}
+    .hubd{color:#6b6862;font-size:13px;line-height:1.5;min-height:58px;}
+    .hubtag{display:inline-block;font-size:11px;font-weight:600;padding:2px 10px;border-radius:20px;background:#e9f1ff;color:#2a78d6;}
+    .hubtag.soon{background:#f0efec;color:#9a978f;}
+    .hubtag.wip{background:#fdf3d9;color:#c88a00;}
+    </style>""",unsafe_allow_html=True)
+    st.markdown("<div style='padding:6px 2px 2px'><span style='font-size:30px;font-weight:800'>🚇 MRT PP18 · ศูนย์รวมงาน</span>"
+                "<div style='color:#6b6862;margin-top:4px'>สายสีม่วง (Contract 1) — SI YAN · เลือกงานที่ต้องการเปิด</div></div>",unsafe_allow_html=True)
+    st.write("")
+    cols=st.columns(3, gap="medium")
+    for i,a in enumerate(MENU_APPS):
+        with cols[i%3]:
+            with st.container(border=True):
+                tg=("hubtag soon" if not a["ready"]
+                    else "hubtag wip" if a.get("tag")=="กำลังปรับปรุง" else "hubtag")
+                st.markdown(f"<div class='hubic'>{a['icon']}</div><div class='hubt'>{a['title']}</div>"
+                            f"<div class='hubd'>{a['desc']}</div><span class='{tg}'>{a['tag']}</span>",unsafe_allow_html=True)
+                st.write("")
+                if a["ready"] and a["view"]:
+                    if st.button("เปิด →", key=f"hub_{i}", use_container_width=True,
+                                 type=("primary" if a["view"]=="punchlist" else "secondary")):
+                        _goto(a["view"])
+                else:
+                    st.button("เร็วๆ นี้", key=f"hub_{i}", use_container_width=True, disabled=True)
+    st.write(""); st.divider()
+    st.caption("ศูนย์รวมเครื่องมือติดตามงาน MRT PP18 · เพิ่มงานส่วนใหม่ได้โดยเพิ่มการ์ดในเมนูนี้")
+
+def render_placeholder(v):
+    if st.columns([1,4])[0].button("← เมนูหลัก", key="ph_back"): _goto("menu")
+    st.markdown("## 🧰 งานส่วนใหม่ (ตัวอย่าง)")
+    st.info("นี่คือหน้าตัวอย่างของ **งานส่วนใหม่** — โครงหน้าและการลิงก์จากเมนูพร้อมแล้ว เหลือแค่ใส่เนื้อหาจริง")
+    st.markdown("- บอกผมได้เลยว่าส่วนนี้เป็นงานอะไร (เช่น อีกสถานี, Punchlist อีกชุด, ตารางตรวจงาน, รายงานอื่น)\n"
+                "- ผมทำให้เหมือน Punchlist PP18 (ตาราง/รูป/แบบแปลน/แก้ไข) หรือรูปแบบใหม่ตามต้องการก็ได้")
+    st.caption("เมนูหลักลิงก์ได้หลายงาน — เพิ่มการ์ดใหม่เมื่อไหร่ก็ได้")
+
+# ---- งานคงเหลือ (Remaining Work) : หน้าใหม่ ใส่ PIN ก่อนเข้า + ป้ายกำลังปรับปรุง ----
+@st.cache_data(show_spinner=False)
+def load_remaining_html():
+    try:
+        with open(os.path.join(APP_DIR,"remaining_work.html"),encoding="utf-8") as fh:
+            return fh.read()
+    except Exception:
+        return ""
+
+def render_remaining():
+    if st.columns([1,5])[0].button("← เมนูหลัก", key="rem_back"):
+        st.session_state["view"]="menu"; st.session_state.pop("_rem_ok",None); st.rerun()
+    st.markdown("### 🧰 งานคงเหลือ (Remaining Work) — PP18 SI YAN")
+    # ---- PIN gate (เข้าหน้านี้ต้องใส่ PIN; ใช้ remaining_pin ถ้าตั้งไว้ ไม่งั้นใช้ PIN เดียวกับแก้ไข) ----
+    gate=str(sget("remaining_pin","") or sget("edit_pin","") or "2569")
+    if not st.session_state.get("_rem_ok"):
+        st.info("🔒 หน้านี้อยู่ระหว่างปรับปรุง — ใส่ PIN เพื่อเข้าดู")
+        cp=st.columns([2,1,3])
+        pv=cp[0].text_input("PIN", type="password", key="rem_pin",
+                            label_visibility="collapsed", placeholder="ใส่ PIN เพื่อเข้า")
+        if cp[1].button("เข้า", use_container_width=True, type="primary"):
+            if str(pv)==gate: st.session_state["_rem_ok"]=True; st.rerun()
+            else: st.error("PIN ไม่ถูกต้อง")
+        st.caption("PIN เดียวกับที่ใช้แก้ไข Punchlist (หรือกำหนดแยกได้ที่ Secrets: remaining_pin)")
+        st.stop()
+    # ---- ป้ายกำลังปรับปรุง ----
+    st.warning("🚧 หน้านี้ **กำลังปรับปรุง** — กำลังเพิ่ม: คลิกโยงแบบแปลน↔ไทม์ไลน์ และแก้ไขผ่าน Google Sheet · "
+               "ตอนนี้แสดงข้อมูลชุดตัวอย่างจากไฟล์ Remaining work list R1 (อ่านอย่างเดียว)")
+    html=load_remaining_html()
+    if not html:
+        st.error("ยังไม่พบไฟล์ remaining_work.html ในโปรเจกต์"); st.stop()
+    import streamlit.components.v1 as components
+    components.html(html, height=1500, scrolling=True)
+
+if "view" not in st.session_state: st.session_state["view"]="menu"
+if st.session_state["view"]=="menu":
+    render_menu(); st.stop()
+if st.session_state["view"]=="remaining":
+    render_remaining(); st.stop()
+if st.session_state["view"]!="punchlist":
+    render_placeholder(st.session_state["view"]); st.stop()
+
+# ---- ปุ่มกลับเมนูหลัก (แสดงเฉพาะหน้า Punchlist) ----
+if st.columns([1,5])[0].button("← เมนูหลัก", key="pl_back"):
+    st.session_state["view"]="menu"; st.rerun()
+
 raw, mode = load_raw()
 df = enrich(raw)
 
