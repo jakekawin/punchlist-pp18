@@ -1,0 +1,933 @@
+[
+{
+"sys": "ECS",
+"type": "Chilled Water Pipe",
+"dia": "15",
+"zone": "CC",
+"act": 0
+},
+{
+"sys": "ECS",
+"type": "Chilled Water Pipe",
+"dia": "15",
+"zone": "MPP",
+"act": 0
+},
+{
+"sys": "ECS",
+"type": "Chilled Water Pipe",
+"dia": "15",
+"zone": "UPF",
+"act": 0
+},
+{
+"sys": "ECS",
+"type": "Chilled Water Pipe",
+"dia": "20",
+"zone": "CC",
+"act": 0
+},
+{
+"sys": "ECS",
+"type": "Chilled Water Pipe",
+"dia": "20",
+"zone": "UPF",
+"act": 0
+},
+{
+"sys": "ECS",
+"type": "Chilled Water Pipe",
+"dia": "25",
+"zone": "CC",
+"act": 34
+},
+{
+"sys": "ECS",
+"type": "Chilled Water Pipe",
+"dia": "25",
+"zone": "MPP",
+"act": 0
+},
+{
+"sys": "ECS",
+"type": "Chilled Water Pipe",
+"dia": "25",
+"zone": "UPF",
+"act": 0
+},
+{
+"sys": "ECS",
+"type": "Chilled Water Pipe",
+"dia": "32",
+"zone": "CC",
+"act": 17
+},
+{
+"sys": "ECS",
+"type": "Chilled Water Pipe",
+"dia": "32",
+"zone": "MPP",
+"act": 0
+},
+{
+"sys": "ECS",
+"type": "Chilled Water Pipe",
+"dia": "32",
+"zone": "UPF",
+"act": 0
+},
+{
+"sys": "ECS",
+"type": "Chilled Water Pipe",
+"dia": "40",
+"zone": "CC",
+"act": 113
+},
+{
+"sys": "ECS",
+"type": "Chilled Water Pipe",
+"dia": "40",
+"zone": "UPF",
+"act": 0
+},
+{
+"sys": "ECS",
+"type": "Chilled Water Pipe",
+"dia": "50",
+"zone": "CC",
+"act": 70
+},
+{
+"sys": "ECS",
+"type": "Chilled Water Pipe",
+"dia": "50",
+"zone": "MPP",
+"act": 115
+},
+{
+"sys": "ECS",
+"type": "Chilled Water Pipe",
+"dia": "50",
+"zone": "UPF",
+"act": 17
+},
+{
+"sys": "ECS",
+"type": "Chilled Water Pipe",
+"dia": "65",
+"zone": "CC",
+"act": 0
+},
+{
+"sys": "ECS",
+"type": "Chilled Water Pipe",
+"dia": "65",
+"zone": "MPP",
+"act": 9
+},
+{
+"sys": "ECS",
+"type": "Chilled Water Pipe",
+"dia": "65",
+"zone": "UPF",
+"act": 127
+},
+{
+"sys": "ECS",
+"type": "Chilled Water Pipe",
+"dia": "80",
+"zone": "CC",
+"act": 0
+},
+{
+"sys": "ECS",
+"type": "Chilled Water Pipe",
+"dia": "80",
+"zone": "MPP",
+"act": 8
+},
+{
+"sys": "ECS",
+"type": "Chilled Water Pipe",
+"dia": "80",
+"zone": "UPF",
+"act": 0
+},
+{
+"sys": "ECS",
+"type": "Chilled Water Pipe",
+"dia": "100",
+"zone": "CC",
+"act": 544
+},
+{
+"sys": "ECS",
+"type": "Chilled Water Pipe",
+"dia": "100",
+"zone": "MPP",
+"act": 0
+},
+{
+"sys": "ECS",
+"type": "Chilled Water Pipe",
+"dia": "100",
+"zone": "UPF",
+"act": 312
+},
+{
+"sys": "ECS",
+"type": "Chilled Water Pipe",
+"dia": "150",
+"zone": "CC",
+"act": 217
+},
+{
+"sys": "ECS",
+"type": "Chilled Water Pipe",
+"dia": "150",
+"zone": "MPP",
+"act": 0
+},
+{
+"sys": "ECS",
+"type": "Chilled Water Pipe",
+"dia": "200",
+"zone": "CC",
+"act": 70
+},
+{
+"sys": "ECS",
+"type": "Chilled Water Pipe",
+"dia": "200",
+"zone": "MPP",
+"act": 497
+},
+{
+"sys": "ECS",
+"type": "Chilled Water Pipe",
+"dia": "250",
+"zone": "CC",
+"act": 0
+},
+{
+"sys": "ECS",
+"type": "Chilled Water Pipe",
+"dia": "300",
+"zone": "CC",
+"act": 40
+},
+{
+"sys": "ECS",
+"type": "Condenser Water Pipe",
+"dia": "15",
+"zone": "CC",
+"act": 0
+},
+{
+"sys": "ECS",
+"type": "Condenser Water Pipe",
+"dia": "15",
+"zone": "RF/GND",
+"act": 0
+},
+{
+"sys": "ECS",
+"type": "Condenser Water Pipe",
+"dia": "15",
+"zone": "UPF",
+"act": 0
+},
+{
+"sys": "ECS",
+"type": "Condenser Water Pipe",
+"dia": "25",
+"zone": "CC",
+"act": 0
+},
+{
+"sys": "ECS",
+"type": "Condenser Water Pipe",
+"dia": "25",
+"zone": "MPP",
+"act": 0
+},
+{
+"sys": "ECS",
+"type": "Condenser Water Pipe",
+"dia": "25",
+"zone": "RF/GND",
+"act": 0
+},
+{
+"sys": "ECS",
+"type": "Condenser Water Pipe",
+"dia": "25",
+"zone": "UPF",
+"act": 0
+},
+{
+"sys": "ECS",
+"type": "Condenser Water Pipe",
+"dia": "32",
+"zone": "CC",
+"act": 0
+},
+{
+"sys": "ECS",
+"type": "Condenser Water Pipe",
+"dia": "32",
+"zone": "MPP",
+"act": 0
+},
+{
+"sys": "ECS",
+"type": "Condenser Water Pipe",
+"dia": "32",
+"zone": "UPF",
+"act": 0
+},
+{
+"sys": "ECS",
+"type": "Condenser Water Pipe",
+"dia": "40",
+"zone": "CC",
+"act": 0
+},
+{
+"sys": "ECS",
+"type": "Condenser Water Pipe",
+"dia": "40",
+"zone": "UPF",
+"act": 0
+},
+{
+"sys": "ECS",
+"type": "Condenser Water Pipe",
+"dia": "50",
+"zone": "CC",
+"act": 0
+},
+{
+"sys": "ECS",
+"type": "Condenser Water Pipe",
+"dia": "50",
+"zone": "RF/GND",
+"act": 0
+},
+{
+"sys": "ECS",
+"type": "Condenser Water Pipe",
+"dia": "50",
+"zone": "UPF",
+"act": 0
+},
+{
+"sys": "ECS",
+"type": "Condenser Water Pipe",
+"dia": "65",
+"zone": "UPF",
+"act": 23
+},
+{
+"sys": "ECS",
+"type": "Condenser Water Pipe",
+"dia": "80",
+"zone": "RF/GND",
+"act": 0
+},
+{
+"sys": "ECS",
+"type": "Condenser Water Pipe",
+"dia": "80",
+"zone": "UPF",
+"act": 101
+},
+{
+"sys": "ECS",
+"type": "Condenser Water Pipe",
+"dia": "100",
+"zone": "CC",
+"act": 0
+},
+{
+"sys": "ECS",
+"type": "Condenser Water Pipe",
+"dia": "100",
+"zone": "MPP",
+"act": 40
+},
+{
+"sys": "ECS",
+"type": "Condenser Water Pipe",
+"dia": "100",
+"zone": "UPF",
+"act": 0
+},
+{
+"sys": "ECS",
+"type": "Condenser Water Pipe",
+"dia": "150",
+"zone": "CC",
+"act": 384
+},
+{
+"sys": "ECS",
+"type": "Condenser Water Pipe",
+"dia": "150",
+"zone": "MPP",
+"act": 395
+},
+{
+"sys": "ECS",
+"type": "Condenser Water Pipe",
+"dia": "150",
+"zone": "RF/GND",
+"act": 0
+},
+{
+"sys": "ECS",
+"type": "Condenser Water Pipe",
+"dia": "150",
+"zone": "UPF",
+"act": 131
+},
+{
+"sys": "ECS",
+"type": "Condenser Water Pipe",
+"dia": "200",
+"zone": "CC",
+"act": 52
+},
+{
+"sys": "ECS",
+"type": "Condenser Water Pipe",
+"dia": "200",
+"zone": "MPP",
+"act": 98
+},
+{
+"sys": "ECS",
+"type": "Condenser Water Pipe",
+"dia": "200",
+"zone": "RF/GND",
+"act": 0
+},
+{
+"sys": "ECS",
+"type": "Condenser Water Pipe",
+"dia": "250",
+"zone": "CC",
+"act": 16
+},
+{
+"sys": "ECS",
+"type": "Condenser Water Pipe",
+"dia": "250",
+"zone": "MPP",
+"act": 53
+},
+{
+"sys": "ECS",
+"type": "Condenser Water Pipe",
+"dia": "250",
+"zone": "RF/GND",
+"act": 0
+},
+{
+"sys": "ECS",
+"type": "Condenser Water Pipe",
+"dia": "300",
+"zone": "CC",
+"act": 25
+},
+{
+"sys": "ECS",
+"type": "Condenser Water Pipe",
+"dia": "300",
+"zone": "RF/GND",
+"act": 0
+},
+{
+"sys": "FP",
+"type": "Fire pipe",
+"dia": "15",
+"zone": "CC",
+"act": 0
+},
+{
+"sys": "FP",
+"type": "Fire pipe",
+"dia": "20",
+"zone": "CC",
+"act": 0
+},
+{
+"sys": "FP",
+"type": "Fire pipe",
+"dia": "25",
+"zone": "CC",
+"act": 185
+},
+{
+"sys": "FP",
+"type": "Fire pipe",
+"dia": "25",
+"zone": "MPP",
+"act": 246
+},
+{
+"sys": "FP",
+"type": "Fire pipe",
+"dia": "25",
+"zone": "RF/GND",
+"act": 0
+},
+{
+"sys": "FP",
+"type": "Fire pipe",
+"dia": "25",
+"zone": "UPF",
+"act": 0
+},
+{
+"sys": "FP",
+"type": "Fire pipe",
+"dia": "32",
+"zone": "CC",
+"act": 40
+},
+{
+"sys": "FP",
+"type": "Fire pipe",
+"dia": "32",
+"zone": "MPP",
+"act": 48
+},
+{
+"sys": "FP",
+"type": "Fire pipe",
+"dia": "32",
+"zone": "UPF",
+"act": 0
+},
+{
+"sys": "FP",
+"type": "Fire pipe",
+"dia": "40",
+"zone": "CC",
+"act": 16
+},
+{
+"sys": "FP",
+"type": "Fire pipe",
+"dia": "40",
+"zone": "MPP",
+"act": 49
+},
+{
+"sys": "FP",
+"type": "Fire pipe",
+"dia": "40",
+"zone": "UPF",
+"act": 0
+},
+{
+"sys": "FP",
+"type": "Fire pipe",
+"dia": "50",
+"zone": "CC",
+"act": 43
+},
+{
+"sys": "FP",
+"type": "Fire pipe",
+"dia": "50",
+"zone": "MPP",
+"act": 48
+},
+{
+"sys": "FP",
+"type": "Fire pipe",
+"dia": "50",
+"zone": "RF/GND",
+"act": 0
+},
+{
+"sys": "FP",
+"type": "Fire pipe",
+"dia": "50",
+"zone": "UPF",
+"act": 14
+},
+{
+"sys": "FP",
+"type": "Fire pipe",
+"dia": "65",
+"zone": "CC",
+"act": 56
+},
+{
+"sys": "FP",
+"type": "Fire pipe",
+"dia": "65",
+"zone": "MPP",
+"act": 52
+},
+{
+"sys": "FP",
+"type": "Fire pipe",
+"dia": "65",
+"zone": "RF/GND",
+"act": 0
+},
+{
+"sys": "FP",
+"type": "Fire pipe",
+"dia": "65",
+"zone": "UPF",
+"act": 51
+},
+{
+"sys": "FP",
+"type": "Fire pipe",
+"dia": "80",
+"zone": "CC",
+"act": 111
+},
+{
+"sys": "FP",
+"type": "Fire pipe",
+"dia": "80",
+"zone": "MPP",
+"act": 128
+},
+{
+"sys": "FP",
+"type": "Fire pipe",
+"dia": "80",
+"zone": "RF/GND",
+"act": 0
+},
+{
+"sys": "FP",
+"type": "Fire pipe",
+"dia": "80",
+"zone": "UPF",
+"act": 186
+},
+{
+"sys": "FP",
+"type": "Fire pipe",
+"dia": "100",
+"zone": "CC",
+"act": 216
+},
+{
+"sys": "FP",
+"type": "Fire pipe",
+"dia": "100",
+"zone": "MPP",
+"act": 505
+},
+{
+"sys": "FP",
+"type": "Fire pipe",
+"dia": "100",
+"zone": "RF/GND",
+"act": 12
+},
+{
+"sys": "FP",
+"type": "Fire pipe",
+"dia": "100",
+"zone": "UPF",
+"act": 126
+},
+{
+"sys": "FP",
+"type": "Fire pipe",
+"dia": "150",
+"zone": "CC",
+"act": 240
+},
+{
+"sys": "FP",
+"type": "Fire pipe",
+"dia": "150",
+"zone": "MPP",
+"act": 225
+},
+{
+"sys": "FP",
+"type": "Fire pipe",
+"dia": "150",
+"zone": "RF/GND",
+"act": 12
+},
+{
+"sys": "FP",
+"type": "Fire pipe",
+"dia": "150",
+"zone": "UPF",
+"act": 331
+},
+{
+"sys": "FP",
+"type": "Fire pipe",
+"dia": "200",
+"zone": "CC",
+"act": 229
+},
+{
+"sys": "FP",
+"type": "Fire pipe",
+"dia": "250",
+"zone": "CC",
+"act": 0
+},
+{
+"sys": "SN",
+"type": "Sanitary pipe",
+"dia": "15",
+"zone": "CC",
+"act": 32
+},
+{
+"sys": "SN",
+"type": "Sanitary pipe",
+"dia": "15",
+"zone": "RF/GND",
+"act": 0
+},
+{
+"sys": "SN",
+"type": "Sanitary pipe",
+"dia": "20",
+"zone": "CC",
+"act": 21
+},
+{
+"sys": "SN",
+"type": "Sanitary pipe",
+"dia": "20",
+"zone": "MPP",
+"act": 71
+},
+{
+"sys": "SN",
+"type": "Sanitary pipe",
+"dia": "20",
+"zone": "RF/GND",
+"act": 0
+},
+{
+"sys": "SN",
+"type": "Sanitary pipe",
+"dia": "20",
+"zone": "UPF",
+"act": 0
+},
+{
+"sys": "SN",
+"type": "Sanitary pipe",
+"dia": "25",
+"zone": "CC",
+"act": 95
+},
+{
+"sys": "SN",
+"type": "Sanitary pipe",
+"dia": "25",
+"zone": "MPP",
+"act": 48
+},
+{
+"sys": "SN",
+"type": "Sanitary pipe",
+"dia": "25",
+"zone": "RF/GND",
+"act": 0
+},
+{
+"sys": "SN",
+"type": "Sanitary pipe",
+"dia": "25",
+"zone": "UPF",
+"act": 15
+},
+{
+"sys": "SN",
+"type": "Sanitary pipe",
+"dia": "32",
+"zone": "CC",
+"act": 49
+},
+{
+"sys": "SN",
+"type": "Sanitary pipe",
+"dia": "32",
+"zone": "RF/GND",
+"act": 0
+},
+{
+"sys": "SN",
+"type": "Sanitary pipe",
+"dia": "40",
+"zone": "CC",
+"act": 2
+},
+{
+"sys": "SN",
+"type": "Sanitary pipe",
+"dia": "40",
+"zone": "MPP",
+"act": 12
+},
+{
+"sys": "SN",
+"type": "Sanitary pipe",
+"dia": "40",
+"zone": "RF/GND",
+"act": 0
+},
+{
+"sys": "SN",
+"type": "Sanitary pipe",
+"dia": "40",
+"zone": "UPF",
+"act": 0
+},
+{
+"sys": "SN",
+"type": "Sanitary pipe",
+"dia": "50",
+"zone": "CC",
+"act": 19
+},
+{
+"sys": "SN",
+"type": "Sanitary pipe",
+"dia": "50",
+"zone": "MPP",
+"act": 415
+},
+{
+"sys": "SN",
+"type": "Sanitary pipe",
+"dia": "50",
+"zone": "RF/GND",
+"act": 0
+},
+{
+"sys": "SN",
+"type": "Sanitary pipe",
+"dia": "50",
+"zone": "UPF",
+"act": 54
+},
+{
+"sys": "SN",
+"type": "Sanitary pipe",
+"dia": "65",
+"zone": "CC",
+"act": 79
+},
+{
+"sys": "SN",
+"type": "Sanitary pipe",
+"dia": "65",
+"zone": "MPP",
+"act": 235
+},
+{
+"sys": "SN",
+"type": "Sanitary pipe",
+"dia": "65",
+"zone": "RF/GND",
+"act": 0
+},
+{
+"sys": "SN",
+"type": "Sanitary pipe",
+"dia": "65",
+"zone": "UPF",
+"act": 0
+},
+{
+"sys": "SN",
+"type": "Sanitary pipe",
+"dia": "80",
+"zone": "CC",
+"act": 0
+},
+{
+"sys": "SN",
+"type": "Sanitary pipe",
+"dia": "80",
+"zone": "MPP",
+"act": 86
+},
+{
+"sys": "SN",
+"type": "Sanitary pipe",
+"dia": "80",
+"zone": "RF/GND",
+"act": 0
+},
+{
+"sys": "SN",
+"type": "Sanitary pipe",
+"dia": "100",
+"zone": "CC",
+"act": 222
+},
+{
+"sys": "SN",
+"type": "Sanitary pipe",
+"dia": "100",
+"zone": "MPP",
+"act": 458
+},
+{
+"sys": "SN",
+"type": "Sanitary pipe",
+"dia": "100",
+"zone": "RF/GND",
+"act": 6
+},
+{
+"sys": "SN",
+"type": "Sanitary pipe",
+"dia": "100",
+"zone": "UPF",
+"act": 201
+},
+{
+"sys": "SN",
+"type": "Sanitary pipe",
+"dia": "150",
+"zone": "CC",
+"act": 57
+},
+{
+"sys": "SN",
+"type": "Sanitary pipe",
+"dia": "150",
+"zone": "MPP",
+"act": 88
+},
+{
+"sys": "SN",
+"type": "Sanitary pipe",
+"dia": "150",
+"zone": "RF/GND",
+"act": 0
+},
+{
+"sys": "SN",
+"type": "Sanitary pipe",
+"dia": "150",
+"zone": "UPF",
+"act": 71
+}
+]
