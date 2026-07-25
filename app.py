@@ -8,6 +8,8 @@ from datetime import datetime, timezone, timedelta
 import pandas as pd
 import streamlit as st
 import plotly.graph_objects as go
+import json
+import streamlit.components.v1 as components
 
 # ----------------------------------------------------------------------------
 st.set_page_config(page_title="Punchlist PP18 · R1", page_icon="🚇", layout="wide")
@@ -560,11 +562,315 @@ def _iso_thai(s):
         dd,mm,yy=str(s).split("/"); return "%s-%02d-%02d"%(yy,int(mm),int(dd))
     except Exception: return str(s)
 
+
+# ===== Actual card: display fragments (styled like the mockup) =====
+# ---- shared CSS (from the mockup) ----
+ACT_CSS = r"""
+.act-wrap *{box-sizing:border-box;font-family:-apple-system,'Segoe UI',Roboto,'Noto Sans Thai',sans-serif;}
+.act-kpis{display:flex;gap:11px;margin:6px 0 6px;flex-wrap:wrap;}
+.act-kpi{background:#fff;border:1px solid #e5e3de;border-radius:13px;padding:11px 17px;min-width:150px;box-shadow:0 1px 3px rgba(0,0,0,.04);}
+.act-kpi .n{font-size:23px;font-weight:800;line-height:1;color:#1a1a1a;} .act-kpi .l{font-size:11.5px;color:#6b6862;margin-top:5px;}
+.act-kpi.big .n{color:#1f9d57;} .act-kpi.tdy .n{color:#2a78d6;}
+.act-chips{display:flex;gap:9px;flex-wrap:wrap;margin:2px 0 6px;}
+.act-chip{background:#fff;border:1px solid #e5e3de;border-radius:10px;padding:8px 14px;font-size:12.5px;min-width:130px;}
+.act-chip .r{display:flex;justify-content:space-between;align-items:center;} .act-chip b{font-size:15px;}
+.act-dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:5px;}
+.act-sub{color:#6b6862;font-size:12.5px;margin:2px 0 4px;}
+.act-wrap table{width:100%;border-collapse:collapse;font-size:12.5px;}
+.act-wrap th{text-align:left;padding:7px 9px;background:#f6f5f3;color:#6b6862;font-size:11px;font-weight:700;border-bottom:2px solid #e5e3de;}
+.act-wrap td{padding:6px 9px;border-bottom:1px solid #f0efec;}
+.act-wrap .rt{text-align:right;} .act-wrap .num{font-variant-numeric:tabular-nums;}
+.act-wrap .tag{font-size:10.5px;font-weight:700;padding:1px 8px;border-radius:20px;color:#fff;}
+.act-tt{font-size:12.5px;font-weight:700;margin:8px 0 6px;}
+"""
+
+# CSS used INSIDE the iframes (self-contained)
+_IFRAME_CSS = r"""
+*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,'Segoe UI',Roboto,'Noto Sans Thai',sans-serif;}
+body{background:#fff;color:#1a1a1a;padding:2px 2px 8px;}
+.legend{display:flex;gap:15px;font-size:12px;margin:2px 0 8px;flex-wrap:wrap;}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:5px;}
+table{width:100%;border-collapse:collapse;font-size:12.5px;}
+th{text-align:left;padding:7px 9px;background:#f6f5f3;color:#6b6862;font-size:11px;font-weight:700;border-bottom:2px solid #e5e3de;}
+td{padding:6px 9px;border-bottom:1px solid #f0efec;}
+.rt{text-align:right;} .num{font-variant-numeric:tabular-nums;}
+.tag{font-size:10.5px;font-weight:700;padding:1px 8px;border-radius:20px;color:#fff;}
+.drow{cursor:pointer;} .drow:hover td{background:#f4f8ff;} .drow.today td{background:#eef7f0;font-weight:700;}
+.ddetail td{background:#fafbfc;font-size:11.5px;color:#555;}
+.filters{display:flex;gap:7px;align-items:center;margin-bottom:11px;flex-wrap:wrap;}
+.fbtn{padding:6px 13px;border-radius:8px;border:1px solid #d9d7d2;background:#f6f5f3;font-size:12px;font-weight:600;color:#555;cursor:pointer;}
+.fbtn.on{background:#2a78d6;border-color:#2a78d6;color:#fff;}
+.grp td{background:#fbfbfa;font-weight:800;}
+.sec-h{font-size:12.5px;font-weight:700;margin:14px 0 6px;} .muted{color:#8a8a86;font-weight:600;}
+input[type=date],select{font-size:12.5px;padding:6px 9px;border:1px solid #d9d7d2;border-radius:8px;font-family:inherit;background:#fff;color:#333;}
+.empty{padding:22px;color:#9a978f;font-size:13px;text-align:center;}
+"""
+
+# ---- shared JS core: data-prep from log + helpers ----
+_JS_CORE = r"""
+const DATA=__DATA__;
+const SYS=DATA.sysmeta, SYSK=['ECS','FP','SN'], ZLABEL=DATA.zlabel, ZONES=DATA.zones;
+const thMon={1:"ม.ค.",2:"ก.พ.",3:"มี.ค.",4:"เม.ย.",5:"พ.ค.",6:"มิ.ย.",7:"ก.ค.",8:"ส.ค.",9:"ก.ย.",10:"ต.ค.",11:"พ.ย.",12:"ธ.ค."};
+function fd(iso){const p=iso.split("-").map(Number);return p[2]+" "+thMon[p[1]];}
+function isoOf(d){const p=(d||'').split('/');return p.length===3?p[2]+'-'+p[1].padStart(2,'0')+'-'+p[0].padStart(2,'0'):d;}
+const LOG=DATA.log.map(e=>({...e,iso:isoOf(e.date),len:(+e.len||0)}));
+// daily series (ascending, ISO) from log
+function dailySeries(){let m={};LOG.forEach(e=>{if(!m[e.iso])m[e.iso]={date:e.iso,ECS:0,FP:0,SN:0};if(SYS[e.sys])m[e.iso][e.sys]+=e.len;});
+ return Object.values(m).sort((a,b)=>a.date<b.date?-1:1);}
+const DAILY=dailySeries();
+function allDays(){return DAILY;}
+// items (cumulative per sys/type/dia/zone) from log
+function itemsFromLog(){let m={};LOG.forEach(e=>{const k=e.sys+'|'+e.type+'|'+e.dia+'|'+e.zone;if(!m[k])m[k]={sys:e.sys,type:e.type,dia:String(e.dia),zone:e.zone,act:0};m[k].act+=e.len;});return Object.values(m);}
+const ITEMS=itemsFromLog();
+function sysCum(s){return ITEMS.filter(i=>i.sys===s).reduce((a,i)=>a+i.act,0);}
+function grand(){return ITEMS.reduce((a,i)=>a+i.act,0);}
+function ptype(t){return t.replace(' Pipe','').replace('Chilled Water','Chilled').replace('Condenser Water','Condenser');}
+"""
+
+# ---- Progress page (chart + daily table + date filter + export) ----
+_JS_PROGRESS = r"""
+// ---- KPI + chips (context) ----
+function renderKPI(){const g=grand();const today=DATA.today;
+ const tl=LOG.filter(e=>e.iso===today).reduce((s,e)=>s+e.len,0);
+ const nd=DAILY.length; const avg=nd?Math.round(g/nd):0;
+ document.getElementById('kpis').innerHTML=
+  kpi('big','ติดตั้งสะสม (จากวันนี้)',Math.round(g).toLocaleString()+' ม.')+
+  kpi('tdy','ทำได้วันนี้',Math.round(tl).toLocaleString()+' ม.')+
+  kpi('','จำนวนวันบันทึก',nd+' วัน')+
+  kpi('','เฉลี่ย/วัน',avg.toLocaleString()+' ม.');
+ let sc='';for(const s of SYSK){sc+='<div class="schip"><div class="r"><span><span class="dot" style="background:'+SYS[s].c+'"></span>'+s+'</span><b style="color:'+SYS[s].c+'">'+Math.round(sysCum(s)).toLocaleString()+'</b></div><div style="font-size:10.5px;color:#8a8a86;margin-top:2px">เมตรสะสม</div></div>';}
+ document.getElementById('syschips').innerHTML=sc;}
+function kpi(c,l,n){return '<div class="kpi '+c+'"><div class="n">'+n+'</div><div class="l">'+l+'</div></div>';}
+// ---- date range ----
+function inRange(iso){const f=document.getElementById('d-from').value,t=document.getElementById('d-to').value;return (!f||iso>=f)&&(!t||iso<=t);}
+function quickRange(m){const dates=DAILY.map(d=>d.date);if(!dates.length)return;const today=DATA.today;let from;
+ if(m==='all')from=dates[0];
+ else if(m==='month')from=today.slice(0,7)+'-01';
+ else{const d=new Date(today);d.setDate(d.getDate()-(m-1));from=d.toISOString().slice(0,10);}
+ document.getElementById('d-from').value=from;document.getElementById('d-to').value=today;renderChart();renderDTable();}
+function rangeLabel(){return (document.getElementById('d-from').value||'all')+'_'+(document.getElementById('d-to').value||'all');}
+function csvDL(name,lines){const csv='﻿'+lines.join('\r\n');const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+ const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+function exportSummary(){let cc=0,cum=[];DAILY.forEach(d=>{cc+=d.ECS+d.FP+d.SN;cum.push(cc);});
+ let L=['วันที่,ECS (ม.),FP (ม.),SN (ม.),รวมวันนั้น (ม.),สะสม (ม.)'],n=0;
+ DAILY.forEach((d,i)=>{if(inRange(d.date)){L.push([d.date,d.ECS,d.FP,d.SN,d.ECS+d.FP+d.SN,cum[i]].join(','));n++;}});
+ if(!n){return;} csvDL('actual_daily_summary_'+rangeLabel()+'.csv',L);}
+function exportDetail(){let L=['วันที่,หย่อม,ระบบ,โซน,ขนาดท่อ,ความยาว (ม.),ผู้บันทึก'],n=0;
+ LOG.slice().sort((a,b)=>a.iso<b.iso?-1:1).forEach(e=>{if(inRange(e.iso)){L.push([e.date,(e.hyom||'—'),e.sys,e.zone,'"'+ptype(e.type)+' · Ø'+e.dia+'mm"',e.len,(e.by||'')].join(','));n++;}});
+ if(!n){return;} csvDL('actual_detail_'+rangeLabel()+'.csv',L);}
+// ---- chart ----
+function renderChart(){
+ const cumAll=[];let cc=0;DAILY.forEach(d=>{cc+=d.ECS+d.FP+d.SN;cumAll.push(cc);});
+ const idx=DAILY.map((d,i)=>i).filter(i=>inRange(DAILY[i].date));
+ const D=idx.map(i=>DAILY[i]);const cum=idx.map(i=>cumAll[i]);const n=D.length;
+ const rsum=D.reduce((s,d)=>s+d.ECS+d.FP+d.SN,0);
+ document.getElementById('range-sum').textContent=n?('ช่วงที่เลือก: '+n+' วัน · ทำได้ '+Math.round(rsum).toLocaleString()+' ม.'):'';
+ if(!n){document.getElementById('chart').innerHTML='<div class="empty">ยังไม่มีข้อมูลในช่วงวันที่ที่เลือก</div>';return;}
+ const bw=Math.max(14,Math.min(30,Math.floor(760/n)));const gap=6;const W=Math.max(720,n*(bw+gap)+70);const H=300;
+ const mL=44,mR=52,mT=14,mB=42;const pw=W-mL-mR,ph=H-mT-mB;
+ const dtot=D.map(d=>d.ECS+d.FP+d.SN);const maxD=Math.max(10,...dtot)*1.15;const maxC=Math.max(10,...cum)*1.05;
+ const x=i=>mL+i*(pw/n)+(pw/n-bw)/2;const yD=v=>mT+ph-(v/maxD*ph);const yC=v=>mT+ph-(v/maxC*ph);
+ let s='<svg viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'" font-family="inherit">';
+ for(let g=0;g<=4;g++){const v=maxD*g/4;const yy=yD(v);s+='<line x1="'+mL+'" y1="'+yy+'" x2="'+(W-mR)+'" y2="'+yy+'" stroke="#f0f0f0"/><text x="'+(mL-6)+'" y="'+(yy+3)+'" font-size="9" fill="#999" text-anchor="end">'+Math.round(v)+'</text>';}
+ for(let g=0;g<=4;g++){const v=maxC*g/4;const yy=yC(v);s+='<text x="'+(W-mR+6)+'" y="'+(yy+3)+'" font-size="9" fill="#1f9d57" text-anchor="start">'+Math.round(v).toLocaleString()+'</text>';}
+ D.forEach((d,i)=>{let yb=mT+ph;const xx=x(i);
+   for(const sy of SYSK){const h=d[sy]/maxD*ph;if(h>0){yb-=h;s+='<rect x="'+xx+'" y="'+yb+'" width="'+bw+'" height="'+h+'" fill="'+SYS[sy].c+'" opacity="0.9"><title>'+fd(d.date)+' · '+sy+': '+d[sy]+' ม.</title></rect>';}}
+   if(i%Math.ceil(n/12)===0||i===n-1){s+='<text x="'+(xx+bw/2)+'" y="'+(H-mB+14)+'" font-size="8.5" fill="#888" text-anchor="middle" transform="rotate(35 '+(xx+bw/2)+' '+(H-mB+14)+')">'+fd(d.date)+'</text>';}});
+ let pts=D.map((d,i)=>({x:x(i)+bw/2,y:yC(cum[i])}));
+ let path='M'+pts.map(p=>p.x.toFixed(1)+' '+p.y.toFixed(1)).join(' L');
+ s+='<path d="'+path+'" fill="none" stroke="#1f9d57" stroke-width="2.4"/>';
+ pts.forEach(p=>{s+='<circle cx="'+p.x+'" cy="'+p.y+'" r="2.6" fill="#1f9d57"/>';});
+ const lp=pts[pts.length-1];s+='<text x="'+(lp.x-4)+'" y="'+(lp.y-8)+'" font-size="10" font-weight="700" fill="#1f9d57" text-anchor="end">สะสม '+Math.round(cum[cum.length-1]).toLocaleString()+' ม.</text>';
+ s+='</svg>';
+ document.getElementById('chart').innerHTML=s;
+ document.getElementById('dlegend').innerHTML=SYSK.map(sy=>'<span><span class="dot" style="background:'+SYS[sy].c+'"></span>'+sy+' (ม./วัน)</span>').join('')+'<span><span style="display:inline-block;width:16px;height:3px;background:#1f9d57;vertical-align:3px;margin-right:5px"></span>สะสม (ม.)</span>';
+}
+// ---- daily table ----
+let openDay=null;
+function renderDTable(){const asc=DAILY;let cum=[],cc=0;asc.forEach(d=>{cc+=d.ECS+d.FP+d.SN;cum.push(cc);});
+ let rows='';let any=false;
+ for(let i=asc.length-1;i>=0;i--){const d=asc[i];if(!inRange(d.date))continue;any=true;const tot=d.ECS+d.FP+d.SN;const isT=d.date===DATA.today;
+  rows+='<tr class="drow'+(isT?' today':'')+'" onclick="toggleDay(\''+d.date+'\')"><td>'+fd(d.date)+(isT?' (วันนี้)':'')+'</td><td class="rt num">'+d.ECS+'</td><td class="rt num">'+d.FP+'</td><td class="rt num">'+d.SN+'</td><td class="rt num"><b>'+tot+'</b></td><td class="rt num">'+Math.round(cum[i]).toLocaleString()+'</td></tr>';
+  if(openDay===d.date){const es=LOG.filter(e=>e.iso===d.date);
+   let det=es.length?es.map(e=>'• '+ptype(e.type)+' · Ø'+e.dia+'mm ('+e.zone+(e.hyom&&e.hyom!=='—'?' · '+e.hyom:'')+') '+e.len+' ม.'+(e.by?' — '+e.by:'')).join('<br>'):'ไม่มีรายละเอียด';
+   rows+='<tr class="ddetail"><td colspan="6">'+det+'</td></tr>';}}
+ document.getElementById('dbody').innerHTML=any?rows:'<tr><td colspan="6" class="empty">ยังไม่มีข้อมูลในช่วงที่เลือก</td></tr>';}
+function toggleDay(d){openDay=openDay===d?null:d;renderDTable();}
+function initRange(){const ds=DAILY.map(d=>d.date);document.getElementById('d-from').value=ds.length?ds[0]:DATA.today;document.getElementById('d-to').value=DATA.today;}
+initRange();renderChart();renderDTable();
+"""
+
+# ---- Summary page (by size/zone/หย่อม + drilldown) ----
+_JS_SUMMARY = r"""
+function renderKPI(){const g=grand();const today=DATA.today;
+ const tl=LOG.filter(e=>e.iso===today).reduce((s,e)=>s+e.len,0);
+ const nd=DAILY.length;const avg=nd?Math.round(g/nd):0;
+ document.getElementById('kpis').innerHTML=
+  kpi('big','ติดตั้งสะสม (จากวันนี้)',Math.round(g).toLocaleString()+' ม.')+
+  kpi('tdy','ทำได้วันนี้',Math.round(tl).toLocaleString()+' ม.')+
+  kpi('','จำนวนวันบันทึก',nd+' วัน')+
+  kpi('','เฉลี่ย/วัน',avg.toLocaleString()+' ม.');
+ let sc='';for(const s of SYSK){sc+='<div class="schip"><div class="r"><span><span class="dot" style="background:'+SYS[s].c+'"></span>'+s+'</span><b style="color:'+SYS[s].c+'">'+Math.round(sysCum(s)).toLocaleString()+'</b></div><div style="font-size:10.5px;color:#8a8a86;margin-top:2px">เมตรสะสม</div></div>';}
+ document.getElementById('syschips').innerHTML=sc;}
+function kpi(c,l,n){return '<div class="kpi '+c+'"><div class="n">'+n+'</div><div class="l">'+l+'</div></div>';}
+let GB='size',HYSEL='';
+function setGB(g){GB=g;HYSEL='';document.getElementById('hy-detail').value='';['size','zone','hyom'].forEach(x=>document.getElementById('gb-'+x).classList.toggle('on',g===x));renderSum();}
+function populateHyDetail(){let hs=DATA.hyom.slice().sort((a,b)=>a.no-b.no);
+ document.getElementById('hy-detail').innerHTML='<option value="">— ทั้งหมด (ดูสรุป)</option>'+hs.map(p=>'<option value="'+p.no+'">จุดที่ '+p.no+' · '+p.sysN+' · '+p.zone+' · '+p.loc+'</option>').join('');}
+function onHyDetail(){HYSEL=document.getElementById('hy-detail').value;renderSum();}
+function pointLog(no){return LOG.filter(e=>{const mm=(e.hyom||'').match(/\d+/);return mm&&+mm[0]===+no;});}
+function renderHyDetail(){const p=DATA.hyom.find(x=>x.no===+HYSEL);const box=document.getElementById('sumtbl');
+ if(!p){box.innerHTML='';return;}
+ let rows={};pointLog(p.no).forEach(e=>{const k=e.sys+'|'+e.type+'|'+e.dia+'|'+e.zone;if(!rows[k])rows[k]={sys:e.sys,type:e.type,dia:e.dia,zone:e.zone,cum:0};rows[k].cum+=e.len;});
+ let arr=Object.values(rows).sort((a,b)=>a.sys.localeCompare(b.sys)||a.type.localeCompare(b.type)||parseInt(a.dia)-parseInt(b.dia));
+ let tot=arr.reduce((s,r)=>s+r.cum,0);let syss=[...new Set(arr.map(r=>r.sys))];
+ let head='<div style="background:#f6f8fb;border:1px solid #e3ecf7;border-radius:10px;padding:11px 14px;margin-bottom:12px"><div style="font-size:14.5px;font-weight:800">📍 จุดที่ '+p.no+' · '+p.loc+'</div><div style="font-size:12.5px;color:#2a4a6b;margin-top:4px">โซน <b>'+(ZLABEL[p.zone]||p.zone)+'</b> · ระบบที่พบ <b>'+(syss.join(', ')||'—')+'</b> · ติดตั้งสะสมรวม <b>'+Math.round(tot).toLocaleString()+' ม.</b></div></div>';
+ let body=arr.map(r=>'<tr><td><span class="tag" style="background:'+(SYS[r.sys]?SYS[r.sys].c:'#888')+'">'+r.sys+'</span></td><td>'+ptype(r.type)+' · Ø'+r.dia+'mm</td><td>'+r.zone+'</td><td class="rt num">'+Math.round(r.cum).toLocaleString()+'</td></tr>').join('');
+ if(!arr.length)body='<tr><td colspan="4" class="empty">ยังไม่มีข้อมูลติดตั้งที่จุดนี้ (นับตั้งแต่วันนี้)</td></tr>';
+ box.innerHTML=head+'<table><thead><tr><th>ระบบ</th><th>ขนาดท่อ</th><th>โซน</th><th class="rt">ติดตั้งสะสม (ม.)</th></tr></thead><tbody>'+body+'<tr class="grp"><td colspan="3">รวมจุดนี้</td><td class="rt num"><b>'+Math.round(tot).toLocaleString()+' ม.</b></td></tr></tbody></table>';}
+function renderSum(){if(HYSEL){renderHyDetail();return;}
+ if(!ITEMS.length){document.getElementById('sumtbl').innerHTML='<div class="empty">ยังไม่มีข้อมูลบันทึก — เริ่มกรอกในแท็บ “กรอกผลงาน” แล้วยอดสะสมจะแสดงที่นี่</div>';return;}
+ let html='<table><thead><tr><th>รายการ</th>';
+ if(GB==='size'){html+='<th class="rt">UPF</th><th class="rt">CC</th><th class="rt">MPP</th><th class="rt">RF/GND</th><th class="rt">รวม (ม.)</th></tr></thead><tbody>';
+  for(const s of SYSK){let sub=ITEMS.filter(i=>i.sys===s);if(!sub.length)continue;
+   let m={};sub.forEach(i=>{const k=i.type+'|'+i.dia;if(!m[k])m[k]={type:i.type,dia:i.dia,UPF:0,CC:0,MPP:0,'RF/GND':0};m[k][i.zone]+=i.act;});
+   let arr=Object.values(m).sort((a,b)=>a.type.localeCompare(b.type)||parseInt(a.dia)-parseInt(b.dia));
+   let st={UPF:0,CC:0,MPP:0,'RF/GND':0};arr.forEach(x=>{['UPF','CC','MPP','RF/GND'].forEach(z=>st[z]+=x[z]);});
+   const stot=st.UPF+st.CC+st.MPP+st['RF/GND'];
+   html+='<tr class="grp"><td>'+SYS[s].n+'</td><td class="rt num">'+Math.round(st.UPF)+'</td><td class="rt num">'+Math.round(st.CC)+'</td><td class="rt num">'+Math.round(st.MPP)+'</td><td class="rt num">'+Math.round(st['RF/GND'])+'</td><td class="rt num"><b>'+Math.round(stot).toLocaleString()+'</b></td></tr>';
+   for(const x of arr){const tot=x.UPF+x.CC+x.MPP+x['RF/GND'];
+    html+='<tr><td style="padding-left:20px">'+ptype(x.type)+' · Ø'+x.dia+'mm</td><td class="rt num">'+Math.round(x.UPF)+'</td><td class="rt num">'+Math.round(x.CC)+'</td><td class="rt num">'+Math.round(x.MPP)+'</td><td class="rt num">'+Math.round(x['RF/GND'])+'</td><td class="rt num">'+Math.round(tot)+'</td></tr>';}}
+ }else if(GB==='zone'){html+='<th class="rt">ECS</th><th class="rt">FP</th><th class="rt">SN</th><th class="rt">รวม (ม.)</th></tr></thead><tbody>';
+  for(const z of ZONES){let e=ITEMS.filter(i=>i.zone===z&&i.sys==='ECS').reduce((a,i)=>a+i.act,0),f=ITEMS.filter(i=>i.zone===z&&i.sys==='FP').reduce((a,i)=>a+i.act,0),n=ITEMS.filter(i=>i.zone===z&&i.sys==='SN').reduce((a,i)=>a+i.act,0);
+   if(e+f+n<=0)continue;
+   html+='<tr><td><b>'+z+'</b></td><td class="rt num">'+Math.round(e)+'</td><td class="rt num">'+Math.round(f)+'</td><td class="rt num">'+Math.round(n)+'</td><td class="rt num"><b>'+Math.round(e+f+n).toLocaleString()+'</b></td></tr>';}
+ }else{html+='<th class="rt">โซน</th><th class="rt">ECS</th><th class="rt">FP</th><th class="rt">SN</th><th class="rt">รวม (ม.)</th></tr></thead><tbody>';
+  const cell=v=>v?Math.round(v).toLocaleString():'<span style="color:#cfcdc8">–</span>';
+  let plog={},un={ECS:0,FP:0,SN:0};
+  LOG.forEach(e=>{const mm=(e.hyom||'').match(/\d+/);if(mm){const no=+mm[0];(plog[no]=plog[no]||{ECS:0,FP:0,SN:0})[e.sys]+=e.len;}else{un[e.sys]+=e.len;}});
+  let pts=DATA.hyom.slice().sort((a,b)=>a.no-b.no);let g={ECS:0,FP:0,SN:0},body='';
+  for(const p of pts){const pl=plog[p.no];if(!pl)continue;let v={ECS:pl.ECS,FP:pl.FP,SN:pl.SN};
+   const tot=v.ECS+v.FP+v.SN;g.ECS+=v.ECS;g.FP+=v.FP;g.SN+=v.SN;
+   const multi=[v.ECS,v.FP,v.SN].filter(x=>x>0).length>1;
+   body+='<tr'+(multi?' style="background:#fffdf0"':'')+'><td>จุดที่ '+p.no+' · '+p.loc+(multi?' 🔀':'')+'</td><td class="rt">'+p.zone+'</td><td class="rt num">'+cell(v.ECS)+'</td><td class="rt num">'+cell(v.FP)+'</td><td class="rt num">'+cell(v.SN)+'</td><td class="rt num"><b>'+Math.round(tot).toLocaleString()+'</b></td></tr>';}
+  if(un.ECS+un.FP+un.SN>0)body+='<tr><td>ไม่ระบุจุด</td><td></td><td class="rt num">'+cell(un.ECS)+'</td><td class="rt num">'+cell(un.FP)+'</td><td class="rt num">'+cell(un.SN)+'</td><td class="rt num"><b>'+Math.round(un.ECS+un.FP+un.SN).toLocaleString()+'</b></td></tr>';
+  const gt=g.ECS+g.FP+g.SN+un.ECS+un.FP+un.SN;
+  if(!body)body='<tr><td colspan="6" class="empty">ยังไม่มีบันทึกที่ติดหย่อม — เริ่มกรอกโดยเลือกหย่อม แล้วยอดจะแยกรายจุดที่นี่</td></tr>';
+  else html+='<tr class="grp"><td>รวมทุกจุด</td><td></td><td class="rt num">'+Math.round(g.ECS+un.ECS).toLocaleString()+'</td><td class="rt num">'+Math.round(g.FP+un.FP).toLocaleString()+'</td><td class="rt num">'+Math.round(g.SN+un.SN).toLocaleString()+'</td><td class="rt num"><b>'+Math.round(gt).toLocaleString()+'</b></td></tr>';
+  html+=body;
+ }
+ html+='</tbody></table>';document.getElementById('sumtbl').innerHTML=html;}
+populateHyDetail();renderSum();
+"""
+
+# ---- KPI/chips bar shared markup used inside iframes ----
+_KPI_BAR = ('<div class="khead" style="margin-bottom:6px">'
+            '<div class="kpis" id="kpis" style="display:flex;gap:11px;flex-wrap:wrap;margin:2px 0 6px"></div>'
+            '<div class="syschips" id="syschips" style="display:flex;gap:9px;flex-wrap:wrap"></div></div>'
+            '<style>.kpi{background:#fff;border:1px solid #e5e3de;border-radius:13px;padding:10px 16px;min-width:150px;box-shadow:0 1px 3px rgba(0,0,0,.04)}'
+            '.kpi .n{font-size:22px;font-weight:800;line-height:1;color:#1a1a1a}.kpi .l{font-size:11.5px;color:#6b6862;margin-top:5px}'
+            '.kpi.big .n{color:#1f9d57}.kpi.tdy .n{color:#2a78d6}'
+            '.schip{background:#fff;border:1px solid #e5e3de;border-radius:10px;padding:7px 13px;font-size:12.5px;min-width:130px}'
+            '.schip .r{display:flex;justify-content:space-between;align-items:center}.schip b{font-size:15px}</style>')
+
+
+def _page(body, js, data):
+    dj = json.dumps(data, ensure_ascii=False)
+    return ('<!doctype html><html><head><meta charset="utf-8">'
+            '<meta name="viewport" content="width=device-width,initial-scale=1">'
+            '<style>' + _IFRAME_CSS + '</style></head><body><div class="act-wrap">'
+            + body + '</div><script>' + js.replace('__DATA__', dj) + '</script></body></html>')
+
+
+def progress_page(data):
+    body = (
+        '<div class="filters">'
+        '<span style="font-size:11.5px;color:#6b6862;font-weight:600">ช่วงวันที่:</span>'
+        '<input id="d-from" type="date" onchange="renderChart();renderDTable()">'
+        '<span style="color:#8a8a86">–</span>'
+        '<input id="d-to" type="date" onchange="renderChart();renderDTable()">'
+        '<button class="fbtn" onclick="quickRange(7)">7 วันล่าสุด</button>'
+        '<button class="fbtn" onclick="quickRange(\'month\')">เดือนนี้</button>'
+        '<button class="fbtn" onclick="quickRange(\'all\')">ทั้งหมด</button>'
+        '<span style="width:1px;height:22px;background:#e0ded9;margin:0 4px"></span>'
+        '<button class="fbtn" onclick="exportSummary()" style="background:#1f9d57;color:#fff;border-color:#1f9d57">⬇ Export สรุปรายวัน</button>'
+        '<button class="fbtn" onclick="exportDetail()" style="background:#2a78d6;color:#fff;border-color:#2a78d6">⬇ Export รายละเอียด</button>'
+        '<span id="range-sum" style="font-size:11.5px;color:#2a78d6;font-weight:700;margin-left:auto"></span>'
+        '</div>'
+        '<div class="legend" id="dlegend"></div>'
+        '<div id="chart" style="width:100%;overflow-x:auto"></div>'
+        '<div class="sec-h">ตารางรายวัน <span class="muted">(แตะแถวเพื่อดูรายละเอียดวันนั้น)</span></div>'
+        '<table><thead><tr><th>วันที่</th><th class="rt">ECS</th><th class="rt">FP</th><th class="rt">SN</th><th class="rt">รวมวันนั้น (ม.)</th><th class="rt">สะสม (ม.)</th></tr></thead><tbody id="dbody"></tbody></table>')
+    return _page(body, _JS_CORE + _JS_PROGRESS, data)
+
+
+def summary_page(data):
+    body = (
+        '<div class="filters"><span style="font-size:11.5px;color:#6b6862;font-weight:600">แยกตาม:</span>'
+        '<button class="fbtn on" id="gb-size" onclick="setGB(\'size\')">ขนาดท่อ</button>'
+        '<button class="fbtn" id="gb-zone" onclick="setGB(\'zone\')">โซน</button>'
+        '<button class="fbtn" id="gb-hyom" onclick="setGB(\'hyom\')">หย่อม (จุด)</button>'
+        '<span style="margin-left:12px;font-size:11.5px;color:#6b6862;font-weight:600">🔍 ดูละเอียดรายหย่อม:</span>'
+        '<select id="hy-detail" onchange="onHyDetail()" style="min-width:280px"></select></div>'
+        '<div id="sumtbl"></div>')
+    return _page(body, _JS_CORE + _JS_SUMMARY, data)
+
+
+def kpi_chips_html(log, hyom, today_iso):
+    """Python-computed KPI + chips for the page header (st.markdown)."""
+    SYSC = {"ECS": "#2a78d6", "FP": "#ef4444", "SN": "#10b981"}
+    total = sum(float(e.get("len", 0) or 0) for e in log)
+    today = sum(float(e.get("len", 0) or 0) for e in log if e.get("iso") == today_iso)
+    days = len({e.get("iso") for e in log if e.get("iso")})
+    avg = round(total / days) if days else 0
+    syscum = {s: sum(float(e.get("len", 0) or 0) for e in log if e.get("sys") == s) for s in ["ECS", "FP", "SN"]}
+
+    def kpi(cls, label, val):
+        return f'<div class="act-kpi {cls}"><div class="n">{val}</div><div class="l">{label}</div></div>'
+    kpis = (kpi("big", "ติดตั้งสะสม (จากวันนี้)", f"{round(total):,} ม.") +
+            kpi("tdy", "ทำได้วันนี้", f"{round(today):,} ม.") +
+            kpi("", "จำนวนวันบันทึก", f"{days} วัน") +
+            kpi("", "เฉลี่ย/วัน", f"{avg:,} ม."))
+    chips = ""
+    for s in ["ECS", "FP", "SN"]:
+        chips += (f'<div class="act-chip"><div class="r"><span><span class="act-dot" style="background:{SYSC[s]}"></span>{s}</span>'
+                  f'<b style="color:{SYSC[s]}">{round(syscum[s]):,}</b></div>'
+                  f'<div style="font-size:10.5px;color:#8a8a86;margin-top:2px">เมตรสะสม</div></div>')
+    return (f'<div class="act-wrap"><div class="act-kpis">{kpis}</div>'
+            f'<div class="act-chips">{chips}</div></div>')
+
+
+def today_rows_html(log, today_iso):
+    """Mockup-style 'today's entries' table (read-only) for the entry tab."""
+    SYSC = {"ECS": "#2a78d6", "FP": "#ef4444", "SN": "#10b981"}
+    rows = [e for e in log if e.get("iso") == today_iso]
+    heads = ["วันที่", "ระบบ", "โซน", "หย่อม", "รายการท่อ", "ความยาว (ม.)", "ผู้บันทึก"]
+    th = "".join(f'<th{" class=rt" if h=="ความยาว (ม.)" else ""}>{h}</th>' for h in heads)
+    if not rows:
+        body = '<tr><td colspan="7" style="color:#9a978f;padding:12px;text-align:center">ยังไม่มีบันทึกวันนี้</td></tr>'
+    else:
+        body = ""
+        for e in rows:
+            t = str(e.get("type", "")).replace(" Pipe", "")
+            badge = f'<span class="tag" style="background:{SYSC.get(e.get("sys"),"#888")}">{e.get("sys","")}</span>'
+            hy = e.get("hyom", "—") or "—"
+            body += (f'<tr><td>{e.get("date","")}</td><td>{badge}</td><td>{e.get("zone","")}</td>'
+                     f'<td>{hy}</td><td>{t} · Ø{e.get("dia","")}mm</td>'
+                     f'<td class="rt num">{round(float(e.get("len",0) or 0))}</td>'
+                     f'<td>{e.get("by","") or "—"}</td></tr>')
+    tot = sum(float(e.get("len", 0) or 0) for e in rows)
+    return (f'<div class="act-wrap"><div class="act-tt">รายการที่บันทึกวันนี้ '
+            f'<span style="color:#8a8a86;font-weight:600">({len(rows)} รายการ · {round(tot)} ม.)</span></div>'
+            f'<table><thead><tr>{th}</tr></thead><tbody>{body}</tbody></table></div>')
+
+
 def render_actual():
-    if st.columns([1,5])[0].button("← เมนูหลัก", key="act_back"):
+    st.markdown(f"<style>{ACT_CSS}</style>", unsafe_allow_html=True)
+    hcol=st.columns([5,1])
+    hcol[0].markdown("### 📝 บันทึกผลงานประจำวัน (Actual) — งานท่อ PP18")
+    if hcol[1].button("← เมนูหลัก", key="act_back", use_container_width=True):
         st.session_state["view"]="menu"; st.session_state.pop("_act_ok",None); st.rerun()
-    st.markdown("### 📝 บันทึกผลงานประจำวัน (Actual) — งานท่อ PP18")
-    st.caption("บันทึกความยาวท่อติดตั้งจริงรายวัน → เก็บลง Google Sheet แล้วรวมสะสมให้เอง · ระบบ ECS / FP / SN")
+    st.caption("บันทึกความยาวท่อติดตั้งจริงรายวัน → เก็บลง Google Sheet · นับตั้งแต่วันนี้ · ระบบ ECS / FP / SN")
     gate=str(sget("actual_pin","") or sget("edit_pin","") or "2569")
     if not st.session_state.get("_act_ok"):
         st.info("🔒 ใส่ PIN เพื่อเข้าหน้านี้")
@@ -584,14 +890,24 @@ def render_actual():
     if not connected:
         st.warning("ยังไม่ได้เชื่อม Google Sheet — กรอกดูได้แต่ยังบันทึกไม่ได้ (ตั้ง service account ก่อน)")
 
-    log_total=float(logdf["ความยาว"].sum()) if not logdf.empty else 0.0
-    ndays=int(logdf["วันที่"].nunique()) if not logdf.empty else 0
-    _td=bkk_today().strftime("%d/%m/%Y")
-    today_total=float(logdf.loc[logdf["วันที่"]==_td,"ความยาว"].sum()) if not logdf.empty else 0.0
-    k=st.columns(3)
-    k[0].metric("ติดตั้งสะสม (นับจากวันนี้) (ม.)", f"{log_total:,.0f}")
-    k[1].metric("ทำได้วันนี้ (ม.)", f"{today_total:,.0f}")
-    k[2].metric("จำนวนวันบันทึก", ndays)
+    today_iso=bkk_today().isoformat()
+    _lg=[]
+    if not logdf.empty:
+        for _,r in logdf.iterrows():
+            _lg.append({"date":str(r["วันที่"]),"sys":str(r["ระบบ"]),"type":str(r["ประเภทท่อ"]),
+                        "dia":str(r["ขนาด"]),"zone":str(r["โซน"]),
+                        "hyom":(str(r.get("หย่อม","—")) or "—"),
+                        "len":float(r["ความยาว"] or 0),"by":(str(r.get("ผู้บันทึก","")) or ""),
+                        "iso":_iso_thai(r["วันที่"])})
+    _hy=[]
+    for p in hyom:
+        try: _no=int(str(p.get("no","")).strip() or 0)
+        except Exception: _no=0
+        _hy.append({"no":_no,"sysN":p.get("sysN",p.get("sys","")),"zone":p.get("zone",""),"loc":p.get("loc","")})
+    _DATA={"log":_lg,"hyom":_hy,"today":today_iso,"zones":ACT_ZONES,"zlabel":ACT_ZLAB,
+           "sysmeta":{s:{"c":ACT_SYSCOL[s],"n":ACT_SYSLAB[s]} for s in ACT_SYS}}
+
+    st.markdown(kpi_chips_html(_lg,_hy,today_iso), unsafe_allow_html=True)
 
     tabE,tabP,tabS=st.tabs(["📝 กรอกผลงาน","📅 Progress รายวัน","📊 สรุปสะสม"])
 
@@ -644,96 +960,19 @@ def render_actual():
                         st.session_state["_act_saved"]=len(rows); st.rerun()
                     except Exception as e:
                         st.error(f"บันทึกไม่สำเร็จ: {e}")
-        if not logdf.empty:
-            st.markdown("##### บันทึกล่าสุด")
-            st.dataframe(logdf[ACT_HEADERS[:8]].tail(15).iloc[::-1], use_container_width=True, hide_index=True)
+        st.markdown(today_rows_html(_lg,today_iso), unsafe_allow_html=True)
 
     with tabP:
-        if logdf.empty:
-            st.info("ยังไม่มีข้อมูลบันทึก — เริ่มกรอกในแท็บ “กรอกผลงาน”")
+        if not _lg:
+            st.info("ยังไม่มีข้อมูลบันทึก — เริ่มกรอกในแท็บ “กรอกผลงาน” แล้วกราฟ/ตารางจะแสดงที่นี่")
         else:
-            import datetime as _dt
-            g=logdf.copy(); g["_iso"]=g["วันที่"].map(_iso_thai)
-            piv=g.pivot_table(index="_iso", columns="ระบบ", values="ความยาว", aggfunc="sum", fill_value=0).sort_index()
-            for s in ACT_SYS:
-                if s not in piv.columns: piv[s]=0.0
-            piv=piv[ACT_SYS]
-            piv["รวมวันนั้น"]=piv[ACT_SYS].sum(axis=1)
-            piv["สะสม"]=piv["รวมวันนั้น"].cumsum()
-            dates=list(piv.index)
-            try: dmin=_dt.date.fromisoformat(dates[0]); dmax=_dt.date.fromisoformat(dates[-1])
-            except Exception: dmin=bkk_today(); dmax=bkk_today()
-            c=st.columns([1.3,1.3,3])
-            f1=c[0].date_input("จาก", value=dmin, key="act_pf")
-            f2=c[1].date_input("ถึง", value=dmax, key="act_pt")
-            fi=f1.isoformat(); ti=f2.isoformat()
-            sel=[x for x in dates if fi<=x<=ti]
-            sub=piv.loc[sel] if sel else piv.iloc[0:0]
-            if len(sel):
-                fig=go.Figure()
-                for s in ACT_SYS:
-                    fig.add_bar(x=sel, y=list(sub[s]), name=s, marker_color=ACT_SYSCOL[s])
-                fig.add_scatter(x=sel, y=list(sub["สะสม"]), name="สะสม", yaxis="y2", mode="lines+markers", line=dict(color="#1f9d57",width=3))
-                fig.update_layout(barmode="stack", height=380, margin=dict(l=6,r=6,t=10,b=6),
-                    paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-                    legend=dict(orientation="h",y=-0.2), yaxis=dict(title="ม./วัน"),
-                    yaxis2=dict(title="สะสม (ม.)", overlaying="y", side="right", showgrid=False))
-                st.plotly_chart(fig, use_container_width=True, config={"displayModeBar":False})
-                st.caption(f"ช่วงที่เลือก: {len(sel)} วัน · ทำได้ {float(sub['รวมวันนั้น'].sum()):,.0f} ม.")
-                tb=sub.reset_index().rename(columns={"_iso":"วันที่"})
-                st.dataframe(tb, use_container_width=True, hide_index=True)
-                st.download_button("⬇ Export สรุปรายวัน (CSV)", ("﻿"+tb.to_csv(index=False)).encode("utf-8"),
-                    file_name=f"actual_daily_{fi}_{ti}.csv", mime="text/csv")
-                gsel=g[(g["_iso"]>=fi)&(g["_iso"]<=ti)][ACT_HEADERS[:8]]
-                st.download_button("⬇ Export รายละเอียด log (CSV)", ("﻿"+gsel.to_csv(index=False)).encode("utf-8"),
-                    file_name=f"actual_detail_{fi}_{ti}.csv", mime="text/csv")
-            else:
-                st.info("ไม่มีข้อมูลในช่วงวันที่ที่เลือก")
+            components.html(progress_page(_DATA), height=1000, scrolling=True)
 
     with tabS:
-        import re as _re
-        rows=[]
-        if not logdf.empty:
-            for _,r in logdf.iterrows():
-                mm=_re.search(r"\d+", str(r.get("หย่อม","")))
-                rows.append({"sys":r["ระบบ"],"type":r["ประเภทท่อ"],"dia":str(r["ขนาด"]),"zone":r["โซน"],"cum":float(r["ความยาว"]),"hyom":(mm.group(0) if mm else "")})
-        dfa=pd.DataFrame(rows)
-        gb=st.radio("แยกตาม", ["ขนาดท่อ","โซน","หย่อม (จุด)"], horizontal=True, key="act_gb")
-        if dfa.empty:
-            st.info("ยังไม่มีข้อมูล")
-        elif gb=="ขนาดท่อ":
-            piv=dfa.pivot_table(index=["sys","type","dia"], columns="zone", values="cum", aggfunc="sum", fill_value=0).reset_index()
-            for z in ACT_ZONES:
-                if z not in piv.columns: piv[z]=0
-            piv["รวม"]=piv[ACT_ZONES].sum(axis=1)
-            piv["รายการ"]=piv["type"].str.replace(" Pipe","",regex=False)+" · Ø"+piv["dia"].astype(str)+"mm"
-            st.dataframe(piv[["sys","รายการ"]+ACT_ZONES+["รวม"]].rename(columns={"sys":"ระบบ"}), use_container_width=True, hide_index=True)
-        elif gb=="โซน":
-            piv=dfa.pivot_table(index="zone", columns="sys", values="cum", aggfunc="sum", fill_value=0).reset_index()
-            for s in ACT_SYS:
-                if s not in piv.columns: piv[s]=0
-            piv["รวม"]=piv[ACT_SYS].sum(axis=1)
-            st.dataframe(piv.rename(columns={"zone":"โซน"}), use_container_width=True, hide_index=True)
+        if not _lg:
+            st.info("ยังไม่มีข้อมูลบันทึก — เริ่มกรอกในแท็บ “กรอกผลงาน” แล้วสรุปสะสมจะแสดงที่นี่")
         else:
-            hopt=["— ทั้งหมด"]+[f"จุดที่ {p['no']} · {p['sysN']} · {p['zone']} · {p['loc']}" for p in hyom]
-            hsel=st.selectbox("เลือกหย่อมดูละเอียด (ระบบ/ขนาดท่อ/โซน)", hopt, key="act_hd")
-            if hsel=="— ทั้งหมด":
-                dh=dfa[dfa["hyom"]!=""]
-                if dh.empty: st.info("ยังไม่มีบันทึกที่ติดหย่อม — เริ่มกรอกโดยเลือกหย่อม แล้วยอดจะแยกรายจุดที่นี่")
-                else:
-                    piv=dh.pivot_table(index="hyom", columns="sys", values="cum", aggfunc="sum", fill_value=0).reset_index()
-                    for s in ACT_SYS:
-                        if s not in piv.columns: piv[s]=0
-                    piv["รวม"]=piv[ACT_SYS].sum(axis=1); piv["หย่อม"]="จุดที่ "+piv["hyom"].astype(str)
-                    st.dataframe(piv[["หย่อม"]+ACT_SYS+["รวม"]], use_container_width=True, hide_index=True)
-            else:
-                no="".join(ch for ch in hsel.split("·")[0] if ch.isdigit())
-                d2=dfa[dfa["hyom"]==no]
-                if d2.empty: st.info("จุดนี้ยังไม่มีบันทึก — จะขึ้นเมื่อเริ่มกรอกโดยเลือกหย่อมนี้")
-                else:
-                    det=d2.groupby(["sys","type","dia","zone"])["cum"].sum().reset_index()
-                    det["รายการ"]=det["type"].str.replace(" Pipe","",regex=False)+" · Ø"+det["dia"].astype(str)+"mm"
-                    st.dataframe(det[["sys","รายการ","zone","cum"]].rename(columns={"sys":"ระบบ","zone":"โซน","cum":"ติดตั้งสะสม (ม.)"}), use_container_width=True, hide_index=True)
+            components.html(summary_page(_DATA), height=1600, scrolling=True)
 
 if "view" not in st.session_state: st.session_state["view"]="menu"
 if st.session_state["view"]=="menu":
