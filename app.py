@@ -584,14 +584,14 @@ def render_actual():
     if not connected:
         st.warning("ยังไม่ได้เชื่อม Google Sheet — กรอกดูได้แต่ยังบันทึกไม่ได้ (ตั้ง service account ก่อน)")
 
-    base_total=sum(float(r.get("act",0) or 0) for r in boq)
     log_total=float(logdf["ความยาว"].sum()) if not logdf.empty else 0.0
     ndays=int(logdf["วันที่"].nunique()) if not logdf.empty else 0
-    k=st.columns(4)
-    k[0].metric("ติดตั้งสะสมรวม (ม.)", f"{base_total+log_total:,.0f}")
-    k[1].metric("บันทึกในระบบแล้ว (ม.)", f"{log_total:,.0f}")
-    k[2].metric("ยอดยกมา จาก BOQ (ม.)", f"{base_total:,.0f}")
-    k[3].metric("จำนวนวันบันทึก", ndays)
+    _td=bkk_today().strftime("%d/%m/%Y")
+    today_total=float(logdf.loc[logdf["วันที่"]==_td,"ความยาว"].sum()) if not logdf.empty else 0.0
+    k=st.columns(3)
+    k[0].metric("ติดตั้งสะสม (นับจากวันนี้) (ม.)", f"{log_total:,.0f}")
+    k[1].metric("ทำได้วันนี้ (ม.)", f"{today_total:,.0f}")
+    k[2].metric("จำนวนวันบันทึก", ndays)
 
     tabE,tabP,tabS=st.tabs(["📝 กรอกผลงาน","📅 Progress รายวัน","📊 สรุปสะสม"])
 
@@ -612,19 +612,18 @@ def render_actual():
         cat=sorted({(r["type"],str(r["dia"])) for r in boq if r["sys"]==sys},
                    key=lambda t:(t[0], int("".join(ch for ch in t[1] if ch.isdigit()) or 0)))
         def _cum(t,dd):
-            b=sum(float(r.get("act",0) or 0) for r in boq if r["sys"]==sys and r["type"]==t and str(r["dia"])==dd and r["zone"]==zone)
             l=0.0
             if not logdf.empty:
                 m=(logdf["ระบบ"]==sys)&(logdf["ประเภทท่อ"]==t)&(logdf["ขนาด"].astype(str)==dd)&(logdf["โซน"]==zone)
                 l=float(logdf.loc[m,"ความยาว"].sum())
-            return b+l
-        edf=pd.DataFrame([{"รายการท่อ":f"{t.replace(' Pipe','')} · Ø{dd}mm","สะสมเดิม (ม.)":round(_cum(t,dd)),
+            return l
+        edf=pd.DataFrame([{"รายการท่อ":f"{t.replace(' Pipe','')} · Ø{dd}mm","สะสมที่บันทึก (ม.)":round(_cum(t,dd)),
                            "ติดตั้งวันนี้ (ม.)":0,"_type":t,"_dia":dd} for t,dd in cat])
         st.caption(f"กรอกความยาวที่ติดตั้งวันนี้ (เฉพาะที่ทำ) — {ACT_SYSLAB[sys]} · {ACT_ZLAB[zone]} · {('จุด '+hy_no) if hy_no else 'ไม่ระบุจุด'}")
         ed=st.data_editor(edf, key=f"act_ed_{sys}_{zone}", hide_index=True, use_container_width=True, height=430,
             column_config={"_type":None,"_dia":None,
                 "รายการท่อ":st.column_config.TextColumn("รายการท่อ", disabled=True),
-                "สะสมเดิม (ม.)":st.column_config.NumberColumn("สะสมเดิม (ม.)", disabled=True, format="%d"),
+                "สะสมที่บันทึก (ม.)":st.column_config.NumberColumn("สะสมที่บันทึก (ม.)", disabled=True, format="%d"),
                 "ติดตั้งวันนี้ (ม.)":st.column_config.NumberColumn("ติดตั้งวันนี้ (ม.)", min_value=0, step=1, format="%d")})
         cpin,cbtn=st.columns([2,1])
         pin=cpin.text_input("PIN บันทึก", type="password", key="act_sp", label_visibility="collapsed", placeholder="ใส่ PIN เพื่อบันทึก")
@@ -660,7 +659,7 @@ def render_actual():
                 if s not in piv.columns: piv[s]=0.0
             piv=piv[ACT_SYS]
             piv["รวมวันนั้น"]=piv[ACT_SYS].sum(axis=1)
-            piv["สะสม"]=base_total+piv["รวมวันนั้น"].cumsum()
+            piv["สะสม"]=piv["รวมวันนั้น"].cumsum()
             dates=list(piv.index)
             try: dmin=_dt.date.fromisoformat(dates[0]); dmax=_dt.date.fromisoformat(dates[-1])
             except Exception: dmin=bkk_today(); dmax=bkk_today()
@@ -693,7 +692,7 @@ def render_actual():
 
     with tabS:
         import re as _re
-        rows=[{"sys":r["sys"],"type":r["type"],"dia":str(r["dia"]),"zone":r["zone"],"cum":float(r.get("act",0) or 0),"hyom":""} for r in boq]
+        rows=[]
         if not logdf.empty:
             for _,r in logdf.iterrows():
                 mm=_re.search(r"\d+", str(r.get("หย่อม","")))
@@ -720,7 +719,7 @@ def render_actual():
             hsel=st.selectbox("เลือกหย่อมดูละเอียด (ระบบ/ขนาดท่อ/โซน)", hopt, key="act_hd")
             if hsel=="— ทั้งหมด":
                 dh=dfa[dfa["hyom"]!=""]
-                if dh.empty: st.info("ยังไม่มีบันทึกที่ติดหย่อม — พอกรอกโดยเลือกหย่อม ยอดจะแยกรายจุดที่นี่ (ยอดยกมา BOQ ไม่ผูกกับหย่อม)")
+                if dh.empty: st.info("ยังไม่มีบันทึกที่ติดหย่อม — เริ่มกรอกโดยเลือกหย่อม แล้วยอดจะแยกรายจุดที่นี่")
                 else:
                     piv=dh.pivot_table(index="hyom", columns="sys", values="cum", aggfunc="sum", fill_value=0).reset_index()
                     for s in ACT_SYS:
@@ -730,7 +729,7 @@ def render_actual():
             else:
                 no="".join(ch for ch in hsel.split("·")[0] if ch.isdigit())
                 d2=dfa[dfa["hyom"]==no]
-                if d2.empty: st.info("จุดนี้ยังไม่มีบันทึก (ยอดยกมา BOQ ไม่ผูกกับหย่อม — จะขึ้นเมื่อเริ่มกรอกโดยเลือกหย่อมนี้)")
+                if d2.empty: st.info("จุดนี้ยังไม่มีบันทึก — จะขึ้นเมื่อเริ่มกรอกโดยเลือกหย่อมนี้")
                 else:
                     det=d2.groupby(["sys","type","dia","zone"])["cum"].sum().reset_index()
                     det["รายการ"]=det["type"].str.replace(" Pipe","",regex=False)+" · Ø"+det["dia"].astype(str)+"mm"
