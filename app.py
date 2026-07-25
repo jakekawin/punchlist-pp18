@@ -434,6 +434,7 @@ def _goto(v):
 MENU_APPS=[
  {"icon":"📋","title":"Punchlist PP18 SI YAN","desc":"ติดตามงานตามกรอบสีแดง 51 จุด — ตาราง · รูปแบบ · แบบแปลนติดจุด · แก้ไขข้อมูล","view":"punchlist","tag":"พร้อมใช้","ready":True},
  {"icon":"🧰","title":"งานคงเหลือ (Remaining Work)","desc":"แผนงานระบบที่ยังเหลือ — ไทม์ไลน์ Gantt · ตารางกรอง · แบบแปลนโซน 5 ชั้น (ต้องใส่ PIN)","view":"remaining","tag":"กำลังปรับปรุง","ready":True},
+ {"icon":"📝","title":"บันทึกผลงานประจำวัน (Actual)","desc":"บันทึกความยาวท่อติดตั้งจริงรายวัน — ระบบ/โซน/หย่อม · Progress รายวัน · สรุปสะสม · Export (ต้องใส่ PIN)","view":"actual","tag":"กำลังปรับปรุง","ready":True},
  {"icon":"➕","title":"เพิ่มงานถัดไป…","desc":"ช่องสำหรับงานส่วนใหม่ในอนาคต (เพิ่มการ์ดในเมนูได้เรื่อยๆ)","view":None,"tag":"เร็วๆ นี้","ready":False},
 ]
 
@@ -508,11 +509,240 @@ def render_remaining():
     import streamlit.components.v1 as components
     components.html(html, height=1500, scrolling=True)
 
+# ---- บันทึกผลงานประจำวัน (Actual) — เชื่อม Google Sheet (แท็บ "บันทึกผลงาน") ----
+ACTUAL_WS="บันทึกผลงาน"
+ACT_HEADERS=["วันที่","หย่อม","ระบบ","โซน","ประเภทท่อ","ขนาด","ความยาว","ผู้บันทึก","บันทึกเมื่อ"]
+ACT_ZONES=["UPF","CC","MPP","RF/GND"]
+ACT_ZLAB={"UPF":"Upper Platform (UPF)","CC":"Concourse (CC)","MPP":"Multipurpose (MPP)","RF/GND":"Roof/Ground (RF/GND)"}
+ACT_SYS=["ECS","FP","SN"]
+ACT_SYSLAB={"ECS":"ECS (น้ำเย็น/คอนเดนเซอร์)","FP":"FP (ดับเพลิง)","SN":"SN (สุขาภิบาล)"}
+ACT_SYSCOL={"ECS":"#2a78d6","FP":"#ef4444","SN":"#10b981"}
+
+@st.cache_data(show_spinner=False)
+def load_pipe_boq():
+    import json as _j
+    try: return _j.load(open(os.path.join(APP_DIR,"data","pipe_boq.json"),encoding="utf-8"))
+    except Exception: return []
+
+@st.cache_data(show_spinner=False)
+def load_hyom_points():
+    import json as _j
+    try: return _j.load(open(os.path.join(APP_DIR,"data","hyom_points.json"),encoding="utf-8"))
+    except Exception: return []
+
+@st.cache_data(ttl=45, show_spinner=False)
+def load_actual_log_df():
+    try:
+        ws=get_ws()
+        if ws is None: return pd.DataFrame(columns=ACT_HEADERS)
+        try: aws=ws.spreadsheet.worksheet(ACTUAL_WS)
+        except Exception: return pd.DataFrame(columns=ACT_HEADERS)
+        df=pd.DataFrame(aws.get_all_records())
+        if df.empty: return pd.DataFrame(columns=ACT_HEADERS)
+        for c in ACT_HEADERS:
+            if c not in df.columns: df[c]=""
+        df["ความยาว"]=pd.to_numeric(df["ความยาว"], errors="coerce").fillna(0.0)
+        df["ขนาด"]=df["ขนาด"].astype(str)
+        return df
+    except Exception:
+        return pd.DataFrame(columns=ACT_HEADERS)
+
+def save_actual_rows(rows):
+    ws=get_ws(); sh=ws.spreadsheet
+    try: aws=sh.worksheet(ACTUAL_WS)
+    except Exception:
+        aws=sh.add_worksheet(title=ACTUAL_WS, rows=2000, cols=len(ACT_HEADERS))
+        aws.update(values=[ACT_HEADERS], range_name="A1")
+    aws.append_rows(rows, value_input_option="USER_ENTERED")
+
+def _iso_thai(s):
+    try:
+        dd,mm,yy=str(s).split("/"); return "%s-%02d-%02d"%(yy,int(mm),int(dd))
+    except Exception: return str(s)
+
+def render_actual():
+    if st.columns([1,5])[0].button("← เมนูหลัก", key="act_back"):
+        st.session_state["view"]="menu"; st.session_state.pop("_act_ok",None); st.rerun()
+    st.markdown("### 📝 บันทึกผลงานประจำวัน (Actual) — งานท่อ PP18")
+    st.caption("บันทึกความยาวท่อติดตั้งจริงรายวัน → เก็บลง Google Sheet แล้วรวมสะสมให้เอง · ระบบ ECS / FP / SN")
+    gate=str(sget("actual_pin","") or sget("edit_pin","") or "2569")
+    if not st.session_state.get("_act_ok"):
+        st.info("🔒 ใส่ PIN เพื่อเข้าหน้านี้")
+        cp=st.columns([2,1,3])
+        pv=cp[0].text_input("PIN", type="password", key="act_pin", label_visibility="collapsed", placeholder="ใส่ PIN เพื่อเข้า")
+        if cp[1].button("เข้า", use_container_width=True, type="primary", key="act_enter"):
+            if str(pv)==gate: st.session_state["_act_ok"]=True; st.rerun()
+            else: st.error("PIN ไม่ถูกต้อง")
+        st.caption("PIN เดียวกับที่ใช้แก้ไข Punchlist (หรือกำหนดแยกได้ที่ Secrets: actual_pin)")
+        st.stop()
+
+    connected = get_ws() is not None
+    boq=load_pipe_boq(); hyom=load_hyom_points(); logdf=load_actual_log_df()
+    _as=st.session_state.pop("_act_saved",None)
+    if _as is not None:
+        st.toast(f"บันทึกผลงานแล้ว {_as} รายการ ✓", icon="✅")
+    if not connected:
+        st.warning("ยังไม่ได้เชื่อม Google Sheet — กรอกดูได้แต่ยังบันทึกไม่ได้ (ตั้ง service account ก่อน)")
+
+    base_total=sum(float(r.get("act",0) or 0) for r in boq)
+    log_total=float(logdf["ความยาว"].sum()) if not logdf.empty else 0.0
+    ndays=int(logdf["วันที่"].nunique()) if not logdf.empty else 0
+    k=st.columns(4)
+    k[0].metric("ติดตั้งสะสมรวม (ม.)", f"{base_total+log_total:,.0f}")
+    k[1].metric("บันทึกในระบบแล้ว (ม.)", f"{log_total:,.0f}")
+    k[2].metric("ยอดยกมา จาก BOQ (ม.)", f"{base_total:,.0f}")
+    k[3].metric("จำนวนวันบันทึก", ndays)
+
+    tabE,tabP,tabS=st.tabs(["📝 กรอกผลงาน","📅 Progress รายวัน","📊 สรุปสะสม"])
+
+    with tabE:
+        c=st.columns([1.2,3,1.7,1.7,1.3])
+        d=c[0].date_input("วันที่", value=bkk_today(), key="act_d")
+        hopts=["— ไม่ระบุจุด"]+[f"จุดที่ {p['no']} · {p['sysN']} · {p['zone']} · {p['loc']}" for p in hyom]
+        hpick=c[1].selectbox("หย่อมงาน (จุด)", hopts, key="act_h")
+        zpick=c[2].selectbox("โซน", [ACT_ZLAB[z] for z in ACT_ZONES], key="act_z")
+        spick=c[3].selectbox("ระบบ", [ACT_SYSLAB[s] for s in ACT_SYS], key="act_s")
+        by=c[4].text_input("ผู้บันทึก", key="act_b", placeholder="ชื่อ")
+        sys=ACT_SYS[[ACT_SYSLAB[s] for s in ACT_SYS].index(spick)]
+        zone=ACT_ZONES[[ACT_ZLAB[z] for z in ACT_ZONES].index(zpick)]
+        hy_no=""
+        if hpick!="— ไม่ระบุจุด":
+            try: hy_no="".join(ch for ch in hpick.split("·")[0] if ch.isdigit())
+            except Exception: hy_no=""
+        cat=sorted({(r["type"],str(r["dia"])) for r in boq if r["sys"]==sys},
+                   key=lambda t:(t[0], int("".join(ch for ch in t[1] if ch.isdigit()) or 0)))
+        def _cum(t,dd):
+            b=sum(float(r.get("act",0) or 0) for r in boq if r["sys"]==sys and r["type"]==t and str(r["dia"])==dd and r["zone"]==zone)
+            l=0.0
+            if not logdf.empty:
+                m=(logdf["ระบบ"]==sys)&(logdf["ประเภทท่อ"]==t)&(logdf["ขนาด"].astype(str)==dd)&(logdf["โซน"]==zone)
+                l=float(logdf.loc[m,"ความยาว"].sum())
+            return b+l
+        edf=pd.DataFrame([{"รายการท่อ":f"{t.replace(' Pipe','')} · Ø{dd}mm","สะสมเดิม (ม.)":round(_cum(t,dd)),
+                           "ติดตั้งวันนี้ (ม.)":0,"_type":t,"_dia":dd} for t,dd in cat])
+        st.caption(f"กรอกความยาวที่ติดตั้งวันนี้ (เฉพาะที่ทำ) — {ACT_SYSLAB[sys]} · {ACT_ZLAB[zone]} · {('จุด '+hy_no) if hy_no else 'ไม่ระบุจุด'}")
+        ed=st.data_editor(edf, key=f"act_ed_{sys}_{zone}", hide_index=True, use_container_width=True, height=430,
+            column_config={"_type":None,"_dia":None,
+                "รายการท่อ":st.column_config.TextColumn("รายการท่อ", disabled=True),
+                "สะสมเดิม (ม.)":st.column_config.NumberColumn("สะสมเดิม (ม.)", disabled=True, format="%d"),
+                "ติดตั้งวันนี้ (ม.)":st.column_config.NumberColumn("ติดตั้งวันนี้ (ม.)", min_value=0, step=1, format="%d")})
+        cpin,cbtn=st.columns([2,1])
+        pin=cpin.text_input("PIN บันทึก", type="password", key="act_sp", label_visibility="collapsed", placeholder="ใส่ PIN เพื่อบันทึก")
+        if cbtn.button("💾 บันทึกผลงานวันนี้", type="primary", use_container_width=True, key="act_save"):
+            if not connected: st.error("ยังไม่ได้เชื่อม Google Sheet")
+            elif pin_bad(pin): st.error("PIN ไม่ถูกต้อง")
+            else:
+                rows=[]; stamp=_bkk_stamp(); dstr=d.strftime("%d/%m/%Y")
+                for _,r in ed.iterrows():
+                    try: ln=float(r["ติดตั้งวันนี้ (ม.)"])
+                    except Exception: ln=0
+                    if ln and ln>0:
+                        rows.append([dstr, ("จุด "+hy_no) if hy_no else "—", sys, zone, r["_type"], str(r["_dia"]), ln, str(by or ""), stamp])
+                if not rows: st.warning("ยังไม่ได้กรอกความยาวสักช่อง")
+                else:
+                    try:
+                        save_actual_rows(rows); st.cache_data.clear()
+                        st.session_state["_act_saved"]=len(rows); st.rerun()
+                    except Exception as e:
+                        st.error(f"บันทึกไม่สำเร็จ: {e}")
+        if not logdf.empty:
+            st.markdown("##### บันทึกล่าสุด")
+            st.dataframe(logdf[ACT_HEADERS[:8]].tail(15).iloc[::-1], use_container_width=True, hide_index=True)
+
+    with tabP:
+        if logdf.empty:
+            st.info("ยังไม่มีข้อมูลบันทึก — เริ่มกรอกในแท็บ “กรอกผลงาน”")
+        else:
+            import datetime as _dt
+            g=logdf.copy(); g["_iso"]=g["วันที่"].map(_iso_thai)
+            piv=g.pivot_table(index="_iso", columns="ระบบ", values="ความยาว", aggfunc="sum", fill_value=0).sort_index()
+            for s in ACT_SYS:
+                if s not in piv.columns: piv[s]=0.0
+            piv=piv[ACT_SYS]
+            piv["รวมวันนั้น"]=piv[ACT_SYS].sum(axis=1)
+            piv["สะสม"]=base_total+piv["รวมวันนั้น"].cumsum()
+            dates=list(piv.index)
+            try: dmin=_dt.date.fromisoformat(dates[0]); dmax=_dt.date.fromisoformat(dates[-1])
+            except Exception: dmin=bkk_today(); dmax=bkk_today()
+            c=st.columns([1.3,1.3,3])
+            f1=c[0].date_input("จาก", value=dmin, key="act_pf")
+            f2=c[1].date_input("ถึง", value=dmax, key="act_pt")
+            fi=f1.isoformat(); ti=f2.isoformat()
+            sel=[x for x in dates if fi<=x<=ti]
+            sub=piv.loc[sel] if sel else piv.iloc[0:0]
+            if len(sel):
+                fig=go.Figure()
+                for s in ACT_SYS:
+                    fig.add_bar(x=sel, y=list(sub[s]), name=s, marker_color=ACT_SYSCOL[s])
+                fig.add_scatter(x=sel, y=list(sub["สะสม"]), name="สะสม", yaxis="y2", mode="lines+markers", line=dict(color="#1f9d57",width=3))
+                fig.update_layout(barmode="stack", height=380, margin=dict(l=6,r=6,t=10,b=6),
+                    paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+                    legend=dict(orientation="h",y=-0.2), yaxis=dict(title="ม./วัน"),
+                    yaxis2=dict(title="สะสม (ม.)", overlaying="y", side="right", showgrid=False))
+                st.plotly_chart(fig, use_container_width=True, config={"displayModeBar":False})
+                st.caption(f"ช่วงที่เลือก: {len(sel)} วัน · ทำได้ {float(sub['รวมวันนั้น'].sum()):,.0f} ม.")
+                tb=sub.reset_index().rename(columns={"_iso":"วันที่"})
+                st.dataframe(tb, use_container_width=True, hide_index=True)
+                st.download_button("⬇ Export สรุปรายวัน (CSV)", ("﻿"+tb.to_csv(index=False)).encode("utf-8"),
+                    file_name=f"actual_daily_{fi}_{ti}.csv", mime="text/csv")
+                gsel=g[(g["_iso"]>=fi)&(g["_iso"]<=ti)][ACT_HEADERS[:8]]
+                st.download_button("⬇ Export รายละเอียด log (CSV)", ("﻿"+gsel.to_csv(index=False)).encode("utf-8"),
+                    file_name=f"actual_detail_{fi}_{ti}.csv", mime="text/csv")
+            else:
+                st.info("ไม่มีข้อมูลในช่วงวันที่ที่เลือก")
+
+    with tabS:
+        import re as _re
+        rows=[{"sys":r["sys"],"type":r["type"],"dia":str(r["dia"]),"zone":r["zone"],"cum":float(r.get("act",0) or 0),"hyom":""} for r in boq]
+        if not logdf.empty:
+            for _,r in logdf.iterrows():
+                mm=_re.search(r"\d+", str(r.get("หย่อม","")))
+                rows.append({"sys":r["ระบบ"],"type":r["ประเภทท่อ"],"dia":str(r["ขนาด"]),"zone":r["โซน"],"cum":float(r["ความยาว"]),"hyom":(mm.group(0) if mm else "")})
+        dfa=pd.DataFrame(rows)
+        gb=st.radio("แยกตาม", ["ขนาดท่อ","โซน","หย่อม (จุด)"], horizontal=True, key="act_gb")
+        if dfa.empty:
+            st.info("ยังไม่มีข้อมูล")
+        elif gb=="ขนาดท่อ":
+            piv=dfa.pivot_table(index=["sys","type","dia"], columns="zone", values="cum", aggfunc="sum", fill_value=0).reset_index()
+            for z in ACT_ZONES:
+                if z not in piv.columns: piv[z]=0
+            piv["รวม"]=piv[ACT_ZONES].sum(axis=1)
+            piv["รายการ"]=piv["type"].str.replace(" Pipe","",regex=False)+" · Ø"+piv["dia"].astype(str)+"mm"
+            st.dataframe(piv[["sys","รายการ"]+ACT_ZONES+["รวม"]].rename(columns={"sys":"ระบบ"}), use_container_width=True, hide_index=True)
+        elif gb=="โซน":
+            piv=dfa.pivot_table(index="zone", columns="sys", values="cum", aggfunc="sum", fill_value=0).reset_index()
+            for s in ACT_SYS:
+                if s not in piv.columns: piv[s]=0
+            piv["รวม"]=piv[ACT_SYS].sum(axis=1)
+            st.dataframe(piv.rename(columns={"zone":"โซน"}), use_container_width=True, hide_index=True)
+        else:
+            hopt=["— ทั้งหมด"]+[f"จุดที่ {p['no']} · {p['sysN']} · {p['zone']} · {p['loc']}" for p in hyom]
+            hsel=st.selectbox("เลือกหย่อมดูละเอียด (ระบบ/ขนาดท่อ/โซน)", hopt, key="act_hd")
+            if hsel=="— ทั้งหมด":
+                dh=dfa[dfa["hyom"]!=""]
+                if dh.empty: st.info("ยังไม่มีบันทึกที่ติดหย่อม — พอกรอกโดยเลือกหย่อม ยอดจะแยกรายจุดที่นี่ (ยอดยกมา BOQ ไม่ผูกกับหย่อม)")
+                else:
+                    piv=dh.pivot_table(index="hyom", columns="sys", values="cum", aggfunc="sum", fill_value=0).reset_index()
+                    for s in ACT_SYS:
+                        if s not in piv.columns: piv[s]=0
+                    piv["รวม"]=piv[ACT_SYS].sum(axis=1); piv["หย่อม"]="จุดที่ "+piv["hyom"].astype(str)
+                    st.dataframe(piv[["หย่อม"]+ACT_SYS+["รวม"]], use_container_width=True, hide_index=True)
+            else:
+                no="".join(ch for ch in hsel.split("·")[0] if ch.isdigit())
+                d2=dfa[dfa["hyom"]==no]
+                if d2.empty: st.info("จุดนี้ยังไม่มีบันทึก (ยอดยกมา BOQ ไม่ผูกกับหย่อม — จะขึ้นเมื่อเริ่มกรอกโดยเลือกหย่อมนี้)")
+                else:
+                    det=d2.groupby(["sys","type","dia","zone"])["cum"].sum().reset_index()
+                    det["รายการ"]=det["type"].str.replace(" Pipe","",regex=False)+" · Ø"+det["dia"].astype(str)+"mm"
+                    st.dataframe(det[["sys","รายการ","zone","cum"]].rename(columns={"sys":"ระบบ","zone":"โซน","cum":"ติดตั้งสะสม (ม.)"}), use_container_width=True, hide_index=True)
+
 if "view" not in st.session_state: st.session_state["view"]="menu"
 if st.session_state["view"]=="menu":
     render_menu(); st.stop()
 if st.session_state["view"]=="remaining":
     render_remaining(); st.stop()
+if st.session_state["view"]=="actual":
+    render_actual(); st.stop()
 if st.session_state["view"]!="punchlist":
     render_placeholder(st.session_state["view"]); st.stop()
 
