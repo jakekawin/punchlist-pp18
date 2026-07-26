@@ -436,7 +436,7 @@ def _goto(v):
 MENU_APPS=[
  {"icon":"📋","title":"Punchlist PP18 SI YAN","desc":"ติดตามงานตามกรอบสีแดง 51 จุด — ตาราง · รูปแบบ · แบบแปลนติดจุด · แก้ไขข้อมูล","view":"punchlist","tag":"พร้อมใช้","ready":True},
  {"icon":"🧰","title":"งานคงเหลือ (Remaining Work)","desc":"แผนงานระบบที่ยังเหลือ — ไทม์ไลน์ Gantt · ตารางกรอง · แบบแปลนโซน 5 ชั้น (ต้องใส่ PIN)","view":"remaining","tag":"กำลังปรับปรุง","ready":True},
- {"icon":"📝","title":"บันทึกผลงานประจำวัน (Actual)","desc":"บันทึกความยาวท่อติดตั้งจริงรายวัน — ระบบ/โซน/หย่อม · Progress รายวัน · สรุปสะสม · Export","view":"actual","tag":"พร้อมใช้","ready":True},
+ {"icon":"📝","title":"บันทึกผลงานประจำวัน (Actual)","desc":"บันทึกความยาวท่อติดตั้งจริงรายวัน — ระบบ/โซน/หย่อม · Progress รายวัน · สรุปสะสม · Export (ต้องใส่ PIN)","view":"actual","tag":"พร้อมใช้","ready":True},
  {"icon":"➕","title":"เพิ่มงานถัดไป…","desc":"ช่องสำหรับงานส่วนใหม่ในอนาคต (เพิ่มการ์ดในเมนูได้เรื่อยๆ)","view":None,"tag":"เร็วๆ นี้","ready":False},
 ]
 
@@ -878,6 +878,16 @@ def render_actual():
     if hcol[1].button("← เมนูหลัก", key="act_back", use_container_width=True):
         st.session_state["view"]="menu"; st.session_state.pop("_act_ok",None); st.rerun()
     st.caption("บันทึกความยาวท่อติดตั้งจริงรายวัน → เก็บลง Google Sheet · นับตั้งแต่วันนี้ · ระบบ ECS / FP / SN")
+    gate=str(sget("actual_pin","") or sget("edit_pin","") or "2569")
+    if not st.session_state.get("_act_ok"):
+        st.info("🔒 ใส่ PIN เพื่อเข้าหน้านี้")
+        cp=st.columns([2,1,3])
+        pv=cp[0].text_input("PIN", type="password", key="act_pin", label_visibility="collapsed", placeholder="ใส่ PIN เพื่อเข้า")
+        if cp[1].button("เข้า", use_container_width=True, type="primary", key="act_enter"):
+            if str(pv)==gate: st.session_state["_act_ok"]=True; st.rerun()
+            else: st.error("PIN ไม่ถูกต้อง")
+        st.caption("PIN เดียวกับที่ใช้แก้ไข Punchlist (หรือกำหนดแยกได้ที่ Secrets: actual_pin)")
+        st.stop()
 
     connected = get_ws() is not None
     boq=load_pipe_boq(); hyom=load_hyom_points(); logdf=load_actual_log_df()
@@ -903,6 +913,15 @@ def render_actual():
         _hy.append({"no":_no,"sysN":p.get("sysN",p.get("sys","")),"zone":p.get("zone",""),"loc":p.get("loc","")})
     _DATA={"log":_lg,"hyom":_hy,"today":today_iso,"zones":ACT_ZONES,"zlabel":ACT_ZLAB,
            "sysmeta":{s:{"c":ACT_SYSCOL[s],"n":ACT_SYSLAB[s]} for s in ACT_SYS}}
+    # iframe heights sized to content so the Progress/Summary tabs don't inner-scroll
+    _ndays=len({e["iso"] for e in _lg})
+    _ptset=set()
+    for _e in _lg:
+        _dd="".join(ch for ch in str(_e.get("hyom","")) if ch.isdigit())
+        if _dd: _ptset.add(_dd)
+    _sizerows=len({(e["sys"],e["type"],e["dia"]) for e in _lg})+len({e["sys"] for e in _lg})
+    _sum_h=170+max(_sizerows, len(_ptset)+2, 4)*34
+    _prog_h=560+max(_ndays,1)*34
 
     st.markdown(kpi_chips_html(_lg,_hy,today_iso), unsafe_allow_html=True)
 
@@ -933,7 +952,7 @@ def render_actual():
         edf=pd.DataFrame([{"รายการท่อ":f"{t.replace(' Pipe','')} · Ø{dd}mm","สะสมที่บันทึก (ม.)":round(_cum(t,dd)),
                            "ติดตั้งวันนี้ (ม.)":0,"_type":t,"_dia":dd} for t,dd in cat])
         st.caption(f"กรอกความยาวที่ติดตั้งวันนี้ (เฉพาะที่ทำ) — {ACT_SYSLAB[sys]} · {ACT_ZLAB[zone]} · {('จุด '+hy_no) if hy_no else 'ไม่ระบุจุด'}")
-        ed=st.data_editor(edf, key=f"act_ed_{sys}_{zone}", hide_index=True, use_container_width=True, height=430,
+        ed=st.data_editor(edf, key=f"act_ed_{sys}_{zone}", hide_index=True, use_container_width=True, height=int((len(edf)+1)*36),
             column_config={"_type":None,"_dia":None,
                 "รายการท่อ":st.column_config.TextColumn("รายการท่อ", disabled=True),
                 "สะสมที่บันทึก (ม.)":st.column_config.NumberColumn("สะสมที่บันทึก (ม.)", disabled=True, format="%d"),
@@ -960,13 +979,13 @@ def render_actual():
         if not _lg:
             st.info("ยังไม่มีข้อมูลบันทึก — เริ่มกรอกในแท็บ “กรอกผลงาน” แล้วกราฟ/ตารางจะแสดงที่นี่")
         else:
-            components.html(progress_page(_DATA), height=1000, scrolling=True)
+            components.html(progress_page(_DATA), height=_prog_h, scrolling=True)
 
     with tabS:
         if not _lg:
             st.info("ยังไม่มีข้อมูลบันทึก — เริ่มกรอกในแท็บ “กรอกผลงาน” แล้วสรุปสะสมจะแสดงที่นี่")
         else:
-            components.html(summary_page(_DATA), height=1600, scrolling=True)
+            components.html(summary_page(_DATA), height=_sum_h, scrolling=True)
 
 if "view" not in st.session_state: st.session_state["view"]="menu"
 if st.session_state["view"]=="menu":
