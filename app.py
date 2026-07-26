@@ -582,6 +582,13 @@ ACT_CSS = r"""
 .act-wrap .rt{text-align:right;} .act-wrap .num{font-variant-numeric:tabular-nums;}
 .act-wrap .tag{font-size:10.5px;font-weight:700;padding:1px 8px;border-radius:20px;color:#fff;}
 .act-tt{font-size:12.5px;font-weight:700;margin:8px 0 6px;}
+/* native Streamlit tabs -> pill segmented control (match mockup) */
+.stTabs [data-baseweb="tab-list"]{background:#e9e8e4;border-radius:11px;padding:4px;gap:3px;display:inline-flex;border-bottom:none;}
+.stTabs [data-baseweb="tab-list"] button[data-baseweb="tab"]{border-radius:8px;padding:6px 16px;margin:0;height:auto;color:#6b6862;font-weight:600;}
+.stTabs [data-baseweb="tab-list"] button[data-baseweb="tab"]:hover{background:rgba(255,255,255,.5);color:#1a1a1a;}
+.stTabs [data-baseweb="tab-list"] button[aria-selected="true"]{background:#fff;color:#1a1a1a;box-shadow:0 1px 3px rgba(0,0,0,.12);}
+.stTabs [data-baseweb="tab-highlight"],.stTabs [data-baseweb="tab-border"]{display:none;background:transparent;height:0;}
+.stTabs [data-baseweb="tab-list"] button[data-baseweb="tab"] p{font-weight:600;}
 """
 
 # CSS used INSIDE the iframes (self-contained)
