@@ -436,7 +436,7 @@ def _goto(v):
 MENU_APPS=[
  {"icon":"📋","title":"Punchlist PP18 SI YAN","desc":"ติดตามงานตามกรอบสีแดง 51 จุด — ตาราง · รูปแบบ · แบบแปลนติดจุด · แก้ไขข้อมูล","view":"punchlist","tag":"พร้อมใช้","ready":True},
  {"icon":"🧰","title":"งานคงเหลือ (Remaining Work)","desc":"แผนงานระบบที่ยังเหลือ — ไทม์ไลน์ Gantt · ตารางกรอง · แบบแปลนโซน 5 ชั้น (ต้องใส่ PIN)","view":"remaining","tag":"กำลังปรับปรุง","ready":True},
- {"icon":"📝","title":"บันทึกผลงานประจำวัน (Actual)","desc":"บันทึกความยาวท่อติดตั้งจริงรายวัน — ระบบ/โซน/หย่อม · Progress รายวัน · สรุปสะสม · Export (ต้องใส่ PIN)","view":"actual","tag":"กำลังปรับปรุง","ready":True},
+ {"icon":"📝","title":"บันทึกผลงานประจำวัน (Actual)","desc":"บันทึกความยาวท่อติดตั้งจริงรายวัน — ระบบ/โซน/หย่อม · Progress รายวัน · สรุปสะสม · Export","view":"actual","tag":"พร้อมใช้","ready":True},
  {"icon":"➕","title":"เพิ่มงานถัดไป…","desc":"ช่องสำหรับงานส่วนใหม่ในอนาคต (เพิ่มการ์ดในเมนูได้เรื่อยๆ)","view":None,"tag":"เร็วๆ นี้","ready":False},
 ]
 
@@ -871,16 +871,6 @@ def render_actual():
     if hcol[1].button("← เมนูหลัก", key="act_back", use_container_width=True):
         st.session_state["view"]="menu"; st.session_state.pop("_act_ok",None); st.rerun()
     st.caption("บันทึกความยาวท่อติดตั้งจริงรายวัน → เก็บลง Google Sheet · นับตั้งแต่วันนี้ · ระบบ ECS / FP / SN")
-    gate=str(sget("actual_pin","") or sget("edit_pin","") or "2569")
-    if not st.session_state.get("_act_ok"):
-        st.info("🔒 ใส่ PIN เพื่อเข้าหน้านี้")
-        cp=st.columns([2,1,3])
-        pv=cp[0].text_input("PIN", type="password", key="act_pin", label_visibility="collapsed", placeholder="ใส่ PIN เพื่อเข้า")
-        if cp[1].button("เข้า", use_container_width=True, type="primary", key="act_enter"):
-            if str(pv)==gate: st.session_state["_act_ok"]=True; st.rerun()
-            else: st.error("PIN ไม่ถูกต้อง")
-        st.caption("PIN เดียวกับที่ใช้แก้ไข Punchlist (หรือกำหนดแยกได้ที่ Secrets: actual_pin)")
-        st.stop()
 
     connected = get_ws() is not None
     boq=load_pipe_boq(); hyom=load_hyom_points(); logdf=load_actual_log_df()
@@ -941,11 +931,8 @@ def render_actual():
                 "รายการท่อ":st.column_config.TextColumn("รายการท่อ", disabled=True),
                 "สะสมที่บันทึก (ม.)":st.column_config.NumberColumn("สะสมที่บันทึก (ม.)", disabled=True, format="%d"),
                 "ติดตั้งวันนี้ (ม.)":st.column_config.NumberColumn("ติดตั้งวันนี้ (ม.)", min_value=0, step=1, format="%d")})
-        cpin,cbtn=st.columns([2,1])
-        pin=cpin.text_input("PIN บันทึก", type="password", key="act_sp", label_visibility="collapsed", placeholder="ใส่ PIN เพื่อบันทึก")
-        if cbtn.button("💾 บันทึกผลงานวันนี้", type="primary", use_container_width=True, key="act_save"):
+        if st.button("💾 บันทึกผลงานวันนี้", type="primary", key="act_save"):
             if not connected: st.error("ยังไม่ได้เชื่อม Google Sheet")
-            elif pin_bad(pin): st.error("PIN ไม่ถูกต้อง")
             else:
                 rows=[]; stamp=_bkk_stamp(); dstr=d.strftime("%d/%m/%Y")
                 for _,r in ed.iterrows():
