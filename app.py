@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Punchlist Dashboard — สถานี PP18 SI YAN (MRT สายสีม่วง, Contract 1) · R1
+Punchlist Dashboard — สถานี PP18 SI YAN (MRT สายสีม่วง, Contract 1) · R2
 Streamlit app: อ่าน/แก้ข้อมูลจาก Google Sheet แบบ near real-time + ดูรูปแบบราย จุด
 """
 import os, io, base64
@@ -12,7 +12,7 @@ import json
 import streamlit.components.v1 as components
 
 # ----------------------------------------------------------------------------
-st.set_page_config(page_title="Punchlist PP18 · R1", page_icon="🚇", layout="wide")
+st.set_page_config(page_title="Punchlist PP18 · R2", page_icon="🚇", layout="wide")
 APP_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # ---- column names (ตรงกับหัวตารางใน Google Sheet) ----
@@ -436,7 +436,7 @@ def _goto(v):
     st.session_state["view"]=v; st.rerun()
 
 MENU_APPS=[
- {"icon":"📋","title":"Punchlist PP18 SI YAN","desc":"ติดตามงานตามกรอบสีแดง 51 จุด — ตาราง · รูปแบบ · แบบแปลนติดจุด · แก้ไขข้อมูล","view":"punchlist","tag":"พร้อมใช้","ready":True},
+ {"icon":"📋","title":"Punchlist PP18 SI YAN","desc":"ติดตามงานตามกรอบสีแดง 75 จุด — ตาราง · รูปแบบ · แบบแปลนติดจุด · แก้ไขข้อมูล","view":"punchlist","tag":"พร้อมใช้","ready":True},
  {"icon":"🧰","title":"งานคงเหลือ (Remaining Work)","desc":"แผนงานระบบที่ยังเหลือ — ไทม์ไลน์ Gantt · ตารางกรอง · แบบแปลนโซน 5 ชั้น (ต้องใส่ PIN)","view":"remaining","tag":"กำลังปรับปรุง","ready":True},
  {"icon":"📝","title":"บันทึกผลงานประจำวัน (Actual)","desc":"บันทึกความยาวท่อติดตั้งจริงรายวัน — ระบบ/โซน/หย่อม · Progress รายวัน · สรุปสะสม · Export (ต้องใส่ PIN)","view":"actual","tag":"พร้อมใช้","ready":True},
  {"icon":"➕","title":"เพิ่มงานถัดไป…","desc":"ช่องสำหรับงานส่วนใหม่ในอนาคต (เพิ่มการ์ดในเมนูได้เรื่อยๆ)","view":None,"tag":"เร็วๆ นี้","ready":False},
@@ -1028,8 +1028,8 @@ if _ddel is not None:
 # ---- header ----
 left,right=st.columns([4,1])
 with left:
-    st.markdown("### 🚇 Punchlist Dashboard — PP18 SI YAN `R1`")
-    st.caption("MRT สายสีม่วง (Contract 1) · ติดตามงานตามกรอบสีแดงในแบบ · 51 จุด")
+    st.markdown("### 🚇 Punchlist Dashboard — PP18 SI YAN `R2`")
+    st.caption("MRT สายสีม่วง (Contract 1) · ติดตามงานตามกรอบสีแดงในแบบ · 75 จุด")
 with right:
     if st.button("🔄 รีเฟรชข้อมูล", use_container_width=True):
         st.cache_data.clear(); st.rerun()
@@ -1279,4 +1279,4 @@ with tab3:
         confirm_save_dialog()
 
 st.divider()
-st.caption("ที่มา: 2026-07-22_Punchlist_MRT_PP18_R1.xlsx · คอลัมน์ \"เหลือ (วัน)\" คำนวณสดจากวันปัจจุบัน (เขต Asia/Bangkok) · รูปแบบราย จุดฝังในโปรเจกต์ (โฟลเดอร์ images/)")
+st.caption("ที่มา: 2026-07-24_Punchlist_MRT_PP18_R2.xlsx · คอลัมน์ \"เหลือ (วัน)\" คำนวณสดจากวันปัจจุบัน (เขต Asia/Bangkok) · รูปแบบราย จุดฝังในโปรเจกต์ (โฟลเดอร์ images/)")
