@@ -21,7 +21,7 @@
 "no": 4,
 "sysN": "ECS",
 "zone": "MPP",
-"loc": "บริเวณ FCU-M01 / DXU-M01 (E18.11 TES Ple"
+"loc": "บริเวณ FCU-M01 / DXU-M01 (E18.11 TES Plenum/Shaft, Grid 5/B-C)"
 },
 {
 "no": 5,
@@ -33,13 +33,13 @@
 "no": 6,
 "sysN": "FP",
 "zone": "MPP",
-"loc": "โซน sprinkler (แรเงาม่วง) E38.8 AHU/FA ("
+"loc": "โซน sprinkler (แรเงาม่วง) E38.8 AHU/FA (Grid 22-23/A-B)"
 },
 {
 "no": 7,
 "sysN": "FP",
 "zone": "MPP",
-"loc": "โซน sprinkler (แรเงาม่วง) TES Fan Room E"
+"loc": "โซน sprinkler (แรเงาม่วง) TES Fan Room E17.2 (Grid 2.4-4.4)"
 },
 {
 "no": 8,
@@ -57,13 +57,13 @@
 "no": 10,
 "sysN": "SN",
 "zone": "MPP",
-"loc": "บริเวณ E35.19 Station Supply / E34.16 (G"
+"loc": "บริเวณ E35.19 Station Supply / E34.16 (Grid 23/B) — ท่อ W (Pumped)"
 },
 {
 "no": 11,
 "sysN": "SN",
 "zone": "MPP",
-"loc": "Escape Route / Staff Corridor (Grid 4.3/"
+"loc": "Escape Route / Staff Corridor (Grid 4.3/A-B)"
 },
 {
 "no": 12,
@@ -75,13 +75,13 @@
 "no": 13,
 "sysN": "ECS",
 "zone": "CC",
-"loc": "DXU-C01 ห้อง E27.5 Gas Bottle (Grid 23.5"
+"loc": "DXU-C01 ห้อง E27.5 Gas Bottle (Grid 23.5/B)"
 },
 {
 "no": 14,
 "sysN": "ECS",
 "zone": "CC",
-"loc": "Riser CHS/CHR ø150→ø100 (TOS +3980, Grid"
+"loc": "Riser CHS/CHR ø150→ø100 (TOS +3980, Grid 20.6/C)"
 },
 {
 "no": 15,
@@ -99,13 +99,13 @@
 "no": 17,
 "sysN": "ECS",
 "zone": "CC",
-"loc": "FCU-C06 / FCU-C07 บริเวณ TVM (Grid 8/A-B"
+"loc": "FCU-C06 / FCU-C07 บริเวณ TVM (Grid 8/A-B)"
 },
 {
 "no": 18,
 "sysN": "ECS",
 "zone": "CC",
-"loc": "บริเวณ DXU-C01 / FCU-C02 (E27.5, Grid 5."
+"loc": "บริเวณ DXU-C01 / FCU-C02 (E27.5, Grid 5.2-5.5/B)"
 },
 {
 "no": 19,
@@ -123,13 +123,13 @@
 "no": 21,
 "sysN": "ECS",
 "zone": "CC",
-"loc": "โซน FCU กลุ่มห้อง Staff (แรเงาม่วง) Grid"
+"loc": "โซน FCU กลุ่มห้อง Staff (แรเงาม่วง) Grid 18-20/A-B"
 },
 {
 "no": 22,
 "sysN": "ECS",
 "zone": "CC",
-"loc": "FCU-C10 / FCU-C11 บริเวณ TVM (Grid 17-17"
+"loc": "FCU-C10 / FCU-C11 บริเวณ TVM (Grid 17-17.5/C)"
 },
 {
 "no": 23,
@@ -141,7 +141,7 @@
 "no": 24,
 "sysN": "ECS",
 "zone": "CC",
-"loc": "Chemical Dosing Unit + Expansion Tank (G"
+"loc": "Chemical Dosing Unit + Expansion Tank (Grid 23-24/A)"
 },
 {
 "no": 25,
@@ -165,7 +165,7 @@
 "no": 28,
 "sysN": "ECS",
 "zone": "CC",
-"loc": "ท่อเมน CDR/CDS ø200-250 + CHS/CHR ø200 ("
+"loc": "ท่อเมน CDR/CDS ø200-250 + CHS/CHR ø200 (Staff Corridor 20.16)"
 },
 {
 "no": 29,
@@ -177,13 +177,13 @@
 "no": 30,
 "sysN": "FP",
 "zone": "CC",
-"loc": "โซน sprinkler แรเงาม่วง (AHU/Fan Rooms, "
+"loc": "โซน sprinkler แรเงาม่วง (AHU/Fan Rooms, Grid 1-4)"
 },
 {
 "no": 31,
 "sysN": "FP",
 "zone": "CC",
-"loc": "โซน sprinkler แรเงาเขียว (Comm. Equipmen"
+"loc": "โซน sprinkler แรเงาเขียว (Comm. Equipment, Grid 4-5)"
 },
 {
 "no": 32,
@@ -195,91 +195,91 @@
 "no": 33,
 "sysN": "FP",
 "zone": "CC",
-"loc": "โซน sprinkler แรเงาเหลือง (E34.10 Statio"
+"loc": "โซน sprinkler แรเงาเหลือง (E34.10 Station Exhaust / E18.10 TES Plenum, Grid 4-6/B-C)"
 },
 {
 "no": 34,
 "sysN": "FP",
 "zone": "CC",
-"loc": "โซน sprinkler แรเงาม่วง ฝั่งซ้าย (Staff "
+"loc": "โซน sprinkler แรเงาม่วง ฝั่งซ้าย (Staff Dormitory, Grid 19-20)"
 },
 {
 "no": 35,
 "sysN": "FP",
 "zone": "CC",
-"loc": "โซน sprinkler แรเงาม่วง ฝั่งขวา (Grid 22"
+"loc": "โซน sprinkler แรเงาม่วง ฝั่งขวา (Grid 22-24)"
 },
 {
 "no": 36,
 "sysN": "FP",
 "zone": "CC",
-"loc": "ท่อ FSP บริเวณ E24.7 Electrical Service "
+"loc": "ท่อ FSP บริเวณ E24.7 Electrical Service (Grid 19/C)"
 },
 {
 "no": 37,
 "sysN": "FP",
 "zone": "CC",
-"loc": "โซน sprinkler แรเงาเขียว (แนว Corridor แ"
+"loc": "โซน sprinkler แรเงาเขียว (แนว Corridor แถว C, Grid 19-21)"
 },
 {
 "no": 38,
 "sysN": "FP",
 "zone": "CC",
-"loc": "โซน sprinkler แรเงาม่วง (Water Pump/Tank"
+"loc": "โซน sprinkler แรเงาม่วง (Water Pump/Tank Rooms)"
 },
 {
 "no": 39,
 "sysN": "FP",
 "zone": "CC",
-"loc": "โซน sprinkler แรเงาม่วง (Ventilation Ple"
+"loc": "โซน sprinkler แรเงาม่วง (Ventilation Plenum E19.5)"
 },
 {
 "no": 40,
 "sysN": "ECS",
 "zone": "UPF",
-"loc": "WPCU-UP11 / Condenser บริเวณ M5 Signalli"
+"loc": "WPCU-UP11 / Condenser บริเวณ M5 Signalling (Grid 4-5)"
 },
 {
 "no": 41,
 "sysN": "ECS",
 "zone": "UPF",
-"loc": "บริเวณ DXU-UP11 / E24.3 Electrical Servi"
+"loc": "บริเวณ DXU-UP11 / E24.3 Electrical Service (Grid 5/B)"
 },
 {
 "no": 42,
 "sysN": "ECS",
 "zone": "UPF",
-"loc": "บริเวณ AHU-UP05 / DXU-UP10 (M4 Signallin"
+"loc": "บริเวณ AHU-UP05 / DXU-UP10 (M4 Signalling Battery, Grid 6/B)"
 },
 {
 "no": 43,
 "sysN": "ECS",
 "zone": "UPF",
-"loc": "FCU-UP05/UP06 บริเวณ E33.1 PSD Room (Gri"
+"loc": "FCU-UP05/UP06 บริเวณ E33.1 PSD Room (Grid 6-7/B)"
 },
 {
 "no": 44,
 "sysN": "ECS",
 "zone": "UPF",
-"loc": "ท่อ/วาล์ว ø32 บริเวณ Escape Route 17.6 ("
+"loc": "ท่อ/วาล์ว ø32 บริเวณ Escape Route 17.6 (Grid 7/B-C)"
 },
 {
 "no": 45,
 "sysN": "ECS",
 "zone": "UPF",
-"loc": "แนวท่อ CHR/CDS (เส้นไฮไลต์เขียว Grid 8-9"
+"loc": "แนวท่อ CHR/CDS (เส้นไฮไลต์เขียว Grid 8-9/C)"
 },
 {
 "no": 46,
 "sysN": "ECS",
 "zone": "UPF",
-"loc": "ชุดวาล์ว ø80 บริเวณ AHU/OAU-UP01 (Grid 1"
+"loc": "ชุดวาล์ว ø80 บริเวณ AHU/OAU-UP01 (Grid 10-11/C)"
 },
 {
 "no": 47,
 "sysN": "ECS",
 "zone": "UPF",
-"loc": "แนวท่อ (เส้นไฮไลต์เขียว Grid 11-13/C, 18"
+"loc": "แนวท่อ (เส้นไฮไลต์เขียว Grid 11-13/C, 18.74 ม.)"
 },
 {
 "no": 48,
@@ -291,7 +291,7 @@
 "no": 49,
 "sysN": "ECS",
 "zone": "UPF",
-"loc": "แนวท่อ (เส้นไฮไลต์เขียว Grid 14.5-17/C, "
+"loc": "แนวท่อ (เส้นไฮไลต์เขียว Grid 14.5-17/C, 18.61 ม.)"
 },
 {
 "no": 50,
@@ -303,6 +303,150 @@
 "no": 51,
 "sysN": "ECS",
 "zone": "UPF",
-"loc": "ชุดวาล์ว AHU-UP02 / OAU-UP02 (Grid 14.7/"
+"loc": "ชุดวาล์ว AHU-UP02 / OAU-UP02 (Grid 14.7/C)"
+},
+{
+"no": 52,
+"sysN": "ECS",
+"zone": "MPP",
+"loc": "แนวท่อ CHSR/CDSR บริเวณ E18.10 TES (Grid 4-5)"
+},
+{
+"no": 53,
+"sysN": "ECS",
+"zone": "MPP",
+"loc": "แนวท่อ CHSR/CDSR บริเวณเดียวกับจุดที่ 52"
+},
+{
+"no": 54,
+"sysN": "ECS",
+"zone": "MPP",
+"loc": "โซนกรอบแดง ห้อง E11 Multi-Purpose DB/LV Switch (Grid 18-19)"
+},
+{
+"no": 55,
+"sysN": "ECS",
+"zone": "MPP",
+"loc": "โซนม่วง E34.16/E35.19 Station Supply (Grid 22-23)"
+},
+{
+"no": 56,
+"sysN": "ECS",
+"zone": "MPP",
+"loc": "โซนเหลือง AHU-M02 / OAU-M02 (Grid 21-22)"
+},
+{
+"no": 57,
+"sysN": "FP",
+"zone": "MPP",
+"loc": "ท่อ sprinkler ø25 แถว C (Grid 1-2)"
+},
+{
+"no": 58,
+"sysN": "SN",
+"zone": "MPP",
+"loc": "โซนม่วง Staff Corridor 20.20 / E11-E27.6 (Grid 18-19)"
+},
+{
+"no": 59,
+"sysN": "SN",
+"zone": "MPP",
+"loc": "โซนม่วง Drip Tray / Weep Hole บริเวณบันไดเลื่อน (Grid 12-13)"
+},
+{
+"no": 60,
+"sysN": "SN",
+"zone": "MPP",
+"loc": "ท่อ DN90 + โซนม่วง บริเวณ E35.19 (Grid 22-23)"
+},
+{
+"no": 61,
+"sysN": "SN",
+"zone": "MPP",
+"loc": "โซนม่วง E9.3 Pump Room"
+},
+{
+"no": 62,
+"sysN": "ECS",
+"zone": "CC",
+"loc": "AHU-C01 / OAU-C01 (Grid 21)"
+},
+{
+"no": 63,
+"sysN": "ECS",
+"zone": "CC",
+"loc": "โซนม่วง E18.10 TES Plenum (Grid 22-24)"
+},
+{
+"no": 64,
+"sysN": "ECS",
+"zone": "CC",
+"loc": "โซนม่วงกลุ่ม FCU ฝั่งซ้าย (Grid 4.4-6) — แทนจุดเดิม 15,16,18,19,20"
+},
+{
+"no": 65,
+"sysN": "ECS",
+"zone": "CC",
+"loc": "โซนม่วง TVM / FCU-C06,C07 (Grid 7-8) — แทนจุดเดิม 17"
+},
+{
+"no": 66,
+"sysN": "ECS",
+"zone": "CC",
+"loc": "แนวท่อ CDSR/CHSR Concourse Sheet 2"
+},
+{
+"no": 67,
+"sysN": "ECS",
+"zone": "CC",
+"loc": "โซนม่วง TVM / FCU-C10,C11 ฝั่งขวา — แทนจุดเดิม 22"
+},
+{
+"no": 68,
+"sysN": "ECS",
+"zone": "CC",
+"loc": "Riser UP45° (Grid 21.5/B-C)"
+},
+{
+"no": 69,
+"sysN": "ECS",
+"zone": "CC",
+"loc": "Riser UP45° (Grid 21.5/B-C)"
+},
+{
+"no": 70,
+"sysN": "SN",
+"zone": "CC",
+"loc": "โซนม่วง Staff Dormitory/Locker (Grid 19-21)"
+},
+{
+"no": 71,
+"sysN": "FP",
+"zone": "UPF",
+"loc": "โซนม่วง sprinkler บริเวณ ESC-01UP (Grid 3)"
+},
+{
+"no": 72,
+"sysN": "FP",
+"zone": "UPF",
+"loc": "โซนม่วง sprinkler Escape Route (Grid 4/A)"
+},
+{
+"no": 73,
+"sysN": "FP",
+"zone": "UPF",
+"loc": "โซนม่วง sprinkler บริเวณ FSD Room (Grid 6)"
+},
+{
+"no": 74,
+"sysN": "FP",
+"zone": "UPF",
+"loc": "โซนม่วง sprinkler (Grid 6-7, M4 Battery Room)"
+},
+{
+"no": 75,
+"sysN": "FP",
+"zone": "UPF",
+"loc": "E15.3 Tunnel Ventilation Fan Room"
 }
 ]
