@@ -23,7 +23,7 @@ C_DONE="วันที่เสร็จจริง"; C_NOTE="หมายเ�
 ALL_COLS=[C_NO,C_FLOOR,C_SYS,C_DWGF,C_DWG,C_PAGE,C_RED,C_OWNER,C_START,C_DUE,
           C_LOC,C_DETAIL,C_STATUS,C_DONE,C_NOTE]
 
-STATUS_ORDER=["เลยกำหนด–รอตรวจสอบ","กำลังดำเนินการ","รอเชื่อม","รอวัสดุ","รอดำเนินการ","จบงาน"]
+STATUS_ORDER=["เลยกำหนด–รอตรวจสอบ","กำลังดำเนินการ","รอเชื่อม","รอวัสดุ","รอดำเนินการ","จบงาน","ยกเลิก–รวมแผนใหม่"]
 STATUS_META={
  "เลยกำหนด–รอตรวจสอบ":{"key":"crit","color":"#d03b3b","icon":"🔴","short":"เลยกำหนด"},
  "กำลังดำเนินการ":{"key":"warn","color":"#fab219","icon":"🟡","short":"กำลังดำเนินการ"},
@@ -31,6 +31,8 @@ STATUS_META={
  "รอวัสดุ":{"key":"matl","color":"#9b59b6","icon":"🟣","short":"รอวัสดุ"},
  "รอดำเนินการ":{"key":"neut","color":"#8a8a86","icon":"⚪","short":"รอดำเนินการ"},
  "จบงาน":{"key":"done","color":"#1f9d57","icon":"✅","short":"จบงาน"},
+ "ยกเลิก–รวมแผนใหม่":{"key":"cancel","color":"#4b5563","icon":"⛔","short":"ยกเลิก"},
+ "เสร็จแล้ว":{"key":"done","color":"#1f9d57","icon":"✅","short":"จบงาน"},
 }
 FLOOR_ORDER=["Multipurpose","Concourse","Upper Platform"]
 FLOOR_COLOR={"Multipurpose":"#2a78d6","Concourse":"#eb6834","Upper Platform":"#1baf7a"}
@@ -1037,7 +1039,7 @@ with right:
 # ---- KPIs ----
 tot=len(df)
 scount={s:int((df[C_STATUS].astype(str).str.strip()==s).sum()) for s in STATUS_ORDER}
-c_soon=int(((~df["_skey"].isin(["crit","done"])) & (df["_days"].apply(lambda x: x is not None and not pd.isna(x) and 0<=x<=7))).sum())
+c_soon=int(((~df["_skey"].isin(["crit","done","cancel"])) & (df["_days"].apply(lambda x: x is not None and not pd.isna(x) and 0<=x<=7))).sum())
 k=st.columns(1+len(STATUS_ORDER))
 k[0].metric("ทั้งหมด", tot)
 for _ki,_ks in enumerate(STATUS_ORDER):
