@@ -248,17 +248,16 @@ function build(){PTS.forEach(function(p){var m=document.createElement('div');m.c
  m.onmouseenter=function(){bar.style.display='block';bar.innerHTML='<b>จุดที่ '+p.no+(p.nick?' ('+esc(p.nick)+')':'')+'</b> · '+p.icon+' '+esc(p.status)+' · '+esc(p.owner)+' · ครบ '+esc(p.due)+' ('+esc(p.days)+')';};
  m.onmouseleave=function(){bar.style.display='none';};
  m.onclick=function(e){e.stopPropagation();showCard(p);};stage.appendChild(m);});}
-function initFit(){var ww=wrap.clientWidth,wh=wrap.clientHeight,iw=plan.naturalWidth,ih=plan.naturalHeight;if(!iw||!ww){return requestAnimationFrame(initFit);}var dw=ww,dh=ww*ih/iw;stage.style.width=dw+'px';stage.style.height=dh+'px';plan.style.width=dw+'px';plan.style.height=dh+'px';var s=Math.min(1,wh/dh);scale=s;tx=(ww-dw*s)/2;ty=(wh-dh*s)/2;apply();tryFocus();}
-var focusDone=false;
-function tryFocus(){
- if(FOCUS==null||focusDone)return;
+function initFit(){var ww=wrap.clientWidth,wh=wrap.clientHeight,iw=plan.naturalWidth,ih=plan.naturalHeight;if(!iw||!ww){return false;}var dw=ww,dh=ww*ih/iw;stage.style.width=dw+'px';stage.style.height=dh+'px';plan.style.width=dw+'px';plan.style.height=dh+'px';var s=Math.min(1,wh/dh);scale=s;tx=(ww-dw*s)/2;ty=(wh-dh*s)/2;apply();return true;}
+function doFocus(){
  var p=null;for(var i=0;i<PTS.length;i++){if((''+PTS[i].no)===(''+FOCUS)){p=PTS[i];break;}}
  if(!p)return;
  var ww=wrap.clientWidth,wh=wrap.clientHeight,dw=parseFloat(stage.style.width),dh=parseFloat(stage.style.height);
  if(!dw||!dh||!ww)return;
  var px=p.x/100*dw,py=p.y/100*dh,S=Math.max(scale,2.8);
- scale=S;tx=ww/2-px*S;ty=wh/2-py*S;apply();focusDone=true;}
-plan.onload=initFit;initFit();
+ scale=S;tx=ww/2-px*S;ty=wh/2-py*S;apply();}
+function boot(){if(!initFit()){requestAnimationFrame(boot);return;}if(FOCUS!=null)doFocus();}
+plan.onload=boot;boot();
 function zoomAt(cx,cy,f){var ns=Math.min(9,Math.max(0.4,scale*f)),r=ns/scale;tx=cx-(cx-tx)*r;ty=cy-(cy-ty)*r;scale=ns;apply();}
 wrap.addEventListener('wheel',function(e){e.preventDefault();var b=wrap.getBoundingClientRect();zoomAt(e.clientX-b.left,e.clientY-b.top,e.deltaY<0?1.15:1/1.15);},{passive:false});
 document.getElementById('zin').onclick=function(){zoomAt(wrap.clientWidth/2,wrap.clientHeight/2,1.3);};
