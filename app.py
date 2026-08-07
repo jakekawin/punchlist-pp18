@@ -1005,6 +1005,10 @@ def load_raw_fp(wsname):
     for c in ALL_COLS:
         if c not in df.columns: df[c]=""
     df=df[[c for c in ALL_COLS if c in df.columns]].fillna("")
+    # gspread แปลง '3.1' เป็นเลขทศนิยมอัตโนมัติ — บังคับคอลัมน์ข้อความให้เป็น str เสมอ (กัน data_editor error)
+    for _c in (C_NICK, C_STATUS, C_FLOOR):
+        if _c in df.columns:
+            df[_c]=df[_c].map(lambda v: "" if v is None or v=="" else str(v))
     if C_NO in df.columns:
         df=df[df[C_NO].astype(str).str.strip()!=""]
     return df.reset_index(drop=True)
