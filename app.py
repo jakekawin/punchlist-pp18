@@ -16,11 +16,11 @@ st.set_page_config(page_title="Punchlist PP18 · R2", page_icon="🚇", layout="
 APP_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # ---- column names (ตรงกับหัวตารางใน Google Sheet) ----
-C_NO="ลำดับ"; C_FLOOR="ชั้น"; C_SYS="ระบบ"; C_DWGF="ไฟล์แบบ"; C_DWG="Drawing No."
+C_NO="ลำดับ"; C_NICK="ชื่อเรียก"; C_FLOOR="ชั้น"; C_SYS="ระบบ"; C_DWGF="ไฟล์แบบ"; C_DWG="Drawing No."
 C_PAGE="หน้า"; C_RED="ข้อความในกรอบแดง"; C_OWNER="ผู้รับผิดชอบ"; C_START="กำหนดเริ่ม"
 C_DUE="กำหนดเสร็จ"; C_LOC="ตำแหน่ง/บริเวณ"; C_DETAIL="รายละเอียดงาน"; C_STATUS="สถานะ"
 C_DONE="วันที่เสร็จจริง"; C_NOTE="หมายเหตุ"
-ALL_COLS=[C_NO,C_FLOOR,C_SYS,C_DWGF,C_DWG,C_PAGE,C_RED,C_OWNER,C_START,C_DUE,
+ALL_COLS=[C_NO,C_NICK,C_FLOOR,C_SYS,C_DWGF,C_DWG,C_PAGE,C_RED,C_OWNER,C_START,C_DUE,
           C_LOC,C_DETAIL,C_STATUS,C_DONE,C_NOTE]
 
 STATUS_ORDER=["เลยกำหนด–รอตรวจสอบ","กำลังดำเนินการ","รอเชื่อม","รอวัสดุ","รอดำเนินการ","จบงาน","ยกเลิก–รวมแผนใหม่"]
@@ -230,14 +230,15 @@ let scale=1,tx=0,ty=0;
 function apply(){stage.style.transform='translate('+tx+'px,'+ty+'px) scale('+scale+')';}
 function esc(s){return (s==null?'':(''+s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function showCard(p){card.style.display='block';
- card.innerHTML='<span class="x">✕</span><h4>'+p.icon+' จุดที่ '+p.no+' — '+esc(p.status)+'</h4>'+
+ card.innerHTML='<span class="x">✕</span><h4>'+p.icon+' จุดที่ '+p.no+(p.nick?' ('+esc(p.nick)+')':'')+' — '+esc(p.status)+'</h4>'+
+ (p.nick?'<b>ชื่อเรียก:</b> '+esc(p.nick)+'<br>':'')+
  '<b>ชั้น/ระบบ:</b> '+esc(p.floor)+' · '+esc(p.sys)+'<br><b>Drawing:</b> '+esc(p.dwg)+' (หน้า '+esc(p.page)+')<br>'+
  '<b>ตำแหน่ง:</b> '+esc(p.loc)+'<br><b>รายละเอียดงาน:</b> '+esc(p.detail)+'<br><b>ในกรอบแดง:</b> '+esc(p.red)+'<br>'+
  '<b>ผู้รับผิดชอบ:</b> '+esc(p.owner)+'<br><b>กำหนด:</b> '+esc(p.start)+' → '+esc(p.due)+' ('+esc(p.days)+')<br>'+
  '<b>หมายเหตุ:</b> '+esc(p.note||'–');
  card.querySelector('.x').onclick=function(e){e.stopPropagation();card.style.display='none';};}
 function build(){PTS.forEach(function(p){var m=document.createElement('div');m.className='mk';m.style.left=p.x+'%';m.style.top=p.y+'%';m.style.background=p.color;m.textContent=p.no;
- m.onmouseenter=function(){bar.style.display='block';bar.innerHTML='<b>จุดที่ '+p.no+'</b> · '+p.icon+' '+esc(p.status)+' · '+esc(p.owner)+' · ครบ '+esc(p.due)+' ('+esc(p.days)+')';};
+ m.onmouseenter=function(){bar.style.display='block';bar.innerHTML='<b>จุดที่ '+p.no+(p.nick?' ('+esc(p.nick)+')':'')+'</b> · '+p.icon+' '+esc(p.status)+' · '+esc(p.owner)+' · ครบ '+esc(p.due)+' ('+esc(p.days)+')';};
  m.onmouseleave=function(){bar.style.display='none';};
  m.onclick=function(e){e.stopPropagation();showCard(p);};stage.appendChild(m);});}
 function initFit(){var ww=wrap.clientWidth,wh=wrap.clientHeight,iw=plan.naturalWidth,ih=plan.naturalHeight;if(!iw||!ww){return requestAnimationFrame(initFit);}var dw=ww,dh=ww*ih/iw;stage.style.width=dw+'px';stage.style.height=dh+'px';plan.style.width=dw+'px';plan.style.height=dh+'px';var s=Math.min(1,wh/dh);scale=s;tx=(ww-dw*s)/2;ty=(wh-dh*s)/2;apply();}
@@ -1099,6 +1100,7 @@ with tab1:
     st.dataframe(disp, use_container_width=True, hide_index=True, height=560,
         column_config={
             C_NO:   st.column_config.NumberColumn("ลำดับ", format="%d", width="small"),
+            C_NICK: st.column_config.TextColumn("ชื่อเรียก", width="medium", help="ชื่อเล่นที่หน้างานใช้เรียกจุดนี้"),
             C_PAGE: st.column_config.NumberColumn("หน้า", format="%d", width="small"),
         })
 
@@ -1228,7 +1230,7 @@ with tab_plan:
             pos=meta["points"].get(str(no)); row=dmap.get(no)
             if not pos or row is None: continue
             mm=STATUS_META.get(str(row[C_STATUS]).strip(),{})
-            pts.append({"no":no,"x":pos["x"],"y":pos["y"],
+            pts.append({"no":no,"x":pos["x"],"y":pos["y"],"nick":str(row.get(C_NICK,"") or ""),
                 "color":mm.get("color","#8a8a86"),"icon":mm.get("icon","⚪"),
                 "status":str(row[C_STATUS]),"floor":str(row[C_FLOOR]),"sys":str(row[C_SYS]),
                 "dwg":str(row[C_DWG]),"page":str(row[C_PAGE]),"loc":str(row[C_LOC]),
