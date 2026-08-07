@@ -54,7 +54,7 @@ def has_secret(k):
 # Data source: Google Sheet (service account) > public CSV url > local seed
 # ----------------------------------------------------------------------------
 @st.cache_resource(show_spinner=False)
-def get_ws():
+def get_ws(wsname=None):
     # รองรับ service account 2 แบบ: วาง JSON ทั้งก้อน (gcp_service_account_json) หรือ TOML table (gcp_service_account)
     info=None
     if has_secret("gcp_service_account_json"):
@@ -69,8 +69,11 @@ def get_ws():
         creds=Credentials.from_service_account_info(info, scopes=scopes)
         gc=gspread.authorize(creds)
         sh=gc.open_by_url(st.secrets["sheet_url"])
-        wsname=sget("worksheet","Punchlist")
-        try: return sh.worksheet(wsname)
+        if wsname:
+            try: return sh.worksheet(wsname)
+            except Exception: return sh.add_worksheet(title=wsname, rows=200, cols=max(len(ALL_COLS),20))
+        _wn=sget("worksheet","Punchlist")
+        try: return sh.worksheet(_wn)
         except Exception: return sh.sheet1
     return None
 
@@ -438,6 +441,7 @@ def _goto(v):
 
 MENU_APPS=[
  {"icon":"📋","title":"Punchlist PP18 SI YAN","desc":"ติดตามงานตามกรอบสีแดง 75 จุด — ตาราง · รูปแบบ · แบบแปลนติดจุด · แก้ไขข้อมูล","view":"punchlist","tag":"พร้อมใช้","ready":True},
+ {"icon":"🚒","title":"Punchlist FP · Multipurpose","desc":"งานระบบดับเพลิง (FP) ชั้น Multipurpose — ตาราง · แบบแปลนติดจุด · แก้ไขข้อมูล (ชุดแยก แก้ไขได้เอง)","view":"punchlist_fp","tag":"พร้อมใช้","ready":True},
  {"icon":"🧰","title":"งานคงเหลือ (Remaining Work)","desc":"แผนงานระบบที่ยังเหลือ — ไทม์ไลน์ Gantt · ตารางกรอง · แบบแปลนโซน 5 ชั้น (ต้องใส่ PIN)","view":"remaining","tag":"กำลังปรับปรุง","ready":True},
  {"icon":"📝","title":"บันทึกผลงานประจำวัน (Actual)","desc":"บันทึกความยาวท่อติดตั้งจริงรายวัน — ระบบ/โซน/หย่อม · Progress รายวัน · สรุปสะสม · Export (ต้องใส่ PIN)","view":"actual","tag":"พร้อมใช้","ready":True},
  {"icon":"➕","title":"เพิ่มงานถัดไป…","desc":"ช่องสำหรับงานส่วนใหม่ในอนาคต (เพิ่มการ์ดในเมนูได้เรื่อยๆ)","view":None,"tag":"เร็วๆ นี้","ready":False},
@@ -990,6 +994,140 @@ def render_actual():
         else:
             components.html(summary_page(_DATA), height=_sum_h, scrolling=True)
 
+# ===================== การ์ด Punchlist FP · Multipurpose (ชุดแยก) =====================
+FP_WS = "PunchlistFP"
+
+@st.cache_data(ttl=60, show_spinner=False)
+def load_raw_fp(wsname):
+    ws=get_ws(wsname)
+    if ws is None: return pd.DataFrame(columns=ALL_COLS)
+    df=pd.DataFrame(ws.get_all_records())
+    for c in ALL_COLS:
+        if c not in df.columns: df[c]=""
+    df=df[[c for c in ALL_COLS if c in df.columns]].fillna("")
+    if C_NO in df.columns:
+        df=df[df[C_NO].astype(str).str.strip()!=""]
+    return df.reset_index(drop=True)
+
+@st.cache_data(show_spinner=False)
+def load_plans_fp():
+    try:
+        with open(os.path.join(APP_DIR,"plans_fp","plans_meta.json"),encoding="utf-8") as fh:
+            return json.load(fh)
+    except Exception:
+        return {"plans":[],"points":{}}
+
+@st.cache_data(show_spinner=False)
+def plan_fp_img(key):
+    p=os.path.join(APP_DIR,"plans_fp",key+".jpg")
+    if not os.path.exists(p): return ""
+    return "data:image/jpeg;base64,"+base64.b64encode(open(p,"rb").read()).decode()
+
+def render_punchlist_fp():
+    if st.columns([1,5])[0].button("← เมนูหลัก", key="fp_back"):
+        st.session_state["view"]="menu"; st.rerun()
+    _sv=st.session_state.pop("_fp_saved_rows",None)
+    if _sv is not None:
+        st.toast(f"บันทึกกลับ Google Sheet สำเร็จ ({_sv} แถว) ✓", icon="✅")
+    connected=True
+    try:
+        raw=load_raw_fp(FP_WS)
+    except Exception as e:
+        raw=pd.DataFrame(columns=ALL_COLS); connected=False
+        st.warning(f"เชื่อม Google Sheet ไม่สำเร็จ ({e})")
+    df=enrich(raw)
+    left,right=st.columns([4,1])
+    with left:
+        st.markdown("### 🚒 Punchlist FP · Multipurpose")
+        st.caption(f"MRT สายสีม่วง (Contract 1) · งานระบบดับเพลิง (FP) ชั้น Multipurpose · {len(df)} จุด")
+    with right:
+        if st.button("🔄 รีเฟรชข้อมูล", key="fp_refresh", use_container_width=True):
+            st.cache_data.clear(); st.rerun()
+        st.caption(("🟢 เชื่อม Google Sheet (แก้ได้)" if connected else "🟠 ยังไม่เชื่อม Sheet")+f" · ณ {bkk_today().strftime('%d/%m/%Y')}")
+    tot=len(df)
+    scount={s:int((df[C_STATUS].astype(str).str.strip()==s).sum()) for s in STATUS_ORDER}
+    kk=st.columns(1+len(STATUS_ORDER))
+    kk[0].metric("ทั้งหมด", tot)
+    for _i,_s0 in enumerate(STATUS_ORDER):
+        _m=STATUS_META[_s0]; kk[_i+1].metric(f"{_m['icon']} {_m['short']}", scount[_s0])
+    st.divider()
+    if tot>0:
+        st.markdown("##### สรุปตามมิติ")
+        rr=st.columns(2)
+        with rr[0]:
+            st.caption("สถานะงาน")
+            _sv2=[s for s in STATUS_ORDER if scount[s]>0]
+            st.plotly_chart(hbar([(STATUS_META[s]["short"],scount[s]) for s in _sv2], colors=[STATUS_META[s]["color"] for s in _sv2]), use_container_width=True, config={"displayModeBar":False})
+        with rr[1]:
+            st.caption("ตามระบบงาน")
+            _sc=df[C_SYS].replace("","(ไม่ระบุ)").value_counts()
+            st.plotly_chart(hbar(list(_sc.items())), use_container_width=True, config={"displayModeBar":False})
+        st.divider()
+    tabT,tabP,tabE=st.tabs(["📋 ตารางรายการ","🗺️ แบบแปลนติดจุด","✏️ แก้ไขข้อมูล"])
+    with tabT:
+        st.caption(f"แสดง {len(df)} จุด · คอลัมน์ตรงกับ Google Sheet")
+        disp=df[ALL_COLS].copy()
+        for c in (C_NO,C_PAGE): disp[c]=pd.to_numeric(disp[c],errors="coerce").astype("Int64")
+        st.dataframe(disp, use_container_width=True, hide_index=True, height=320,
+            column_config={C_NO:st.column_config.NumberColumn("ลำดับ",format="%d",width="small"),
+                C_NICK:st.column_config.TextColumn("รหัส/ชื่อเรียก",width="small"),
+                C_PAGE:st.column_config.NumberColumn("หน้า",format="%d",width="small")})
+    with tabP:
+        meta=load_plans_fp()
+        if not meta.get("plans"):
+            st.info("ยังไม่มีข้อมูลแบบแปลนติดจุด")
+        else:
+            def _code(n):
+                r=df[df[C_NO].astype(str).str.strip()==str(n)]
+                v=str(r.iloc[0][C_NICK]).strip() if len(r) else ""
+                return v or str(n)
+            opts={f"{p['file']} · หน้า {p['page']}  ({len(p['nos'])} จุด: {', '.join(_code(n) for n in p['nos'])})":p for p in meta["plans"]}
+            lab=st.selectbox("เลือกแบบแปลน (เฉพาะหน้าที่มีจุด)", list(opts.keys()), key="fp_plansel")
+            plan=opts[lab]
+            dmap={int(r[C_NO]):r for _,r in df.iterrows() if str(r[C_NO]).strip() not in ("","nan")}
+            pts=[]
+            for n in plan["nos"]:
+                pos=meta["points"].get(str(n)); row=dmap.get(n)
+                if not pos or row is None: continue
+                mm=STATUS_META.get(str(row[C_STATUS]).strip(),{})
+                pts.append({"no":str(row.get(C_NICK,"") or n),"x":pos["x"],"y":pos["y"],"nick":"",
+                    "color":mm.get("color","#8a8a86"),"icon":mm.get("icon","⚪"),
+                    "status":str(row[C_STATUS]),"floor":str(row[C_FLOOR]),"sys":str(row[C_SYS]),
+                    "dwg":str(row[C_DWG]),"page":str(row[C_PAGE]),"loc":str(row[C_LOC]),
+                    "detail":str(row[C_DETAIL]),"red":str(row[C_RED]),"owner":str(row[C_OWNER]),
+                    "start":str(row[C_START]),"due":str(row[C_DUE]),"days":fmt_days(row),
+                    "note":str(row[C_NOTE] or "")})
+            _cc=st.columns([3,1])
+            _cc[0].caption("🖱️ ชี้/แตะหมุด = รายละเอียด · ลาก/ล้อเมาส์ = เลื่อน-ซูม · สีหมุด = สถานะ")
+            _cnt={}
+            for _p in pts: _cnt[_p['status']]=_cnt.get(_p['status'],0)+1
+            _cc[1].caption("  ".join(f"{STATUS_META[s]['icon']} {_cnt[s]}" for s in STATUS_ORDER if _cnt.get(s)))
+            components.html(build_plan_html(plan_fp_img(plan["key"]), pts, height=640), height=662, scrolling=False)
+            st.caption("แบบระบบดับเพลิง (FP) ชั้น Multipurpose — จากไฟล์ FP Multi · ข้อมูลจุดดึงสดจาก Google Sheet")
+    with tabE:
+        st.caption("แก้ไข / เพิ่ม / ลบจุดได้ (ปุ่ม + ด้านล่าง) แล้วกด บันทึก (ต้องใส่ PIN)")
+        edf=st.data_editor(raw, num_rows="dynamic", use_container_width=True, height=320, key="fp_editor",
+            column_config={C_STATUS:st.column_config.SelectboxColumn("สถานะ",options=STATUS_ORDER),
+                C_FLOOR:st.column_config.SelectboxColumn("ชั้น",options=FLOOR_ORDER),
+                C_NICK:st.column_config.TextColumn("รหัส/ชื่อเรียก"),
+                C_NO:st.column_config.NumberColumn("ลำดับ",format="%d")})
+        cp,cb=st.columns([2,1])
+        pin=cp.text_input("PIN บันทึก", type="password", key="fp_pin", label_visibility="collapsed", placeholder="ใส่ PIN เพื่อบันทึก")
+        if cb.button("💾 บันทึกกลับ Google Sheet", type="primary", key="fp_save", use_container_width=True):
+            if pin_bad(pin): st.error("PIN ไม่ถูกต้อง (หรือยังไม่ได้ตั้ง edit_pin ใน Secrets)")
+            else:
+                try:
+                    out=edf.copy(); out=out[out[C_NO].map(lambda v:_canon_no(v)!="")]
+                    ws=get_ws(FP_WS)
+                    if ws is None:
+                        st.error("ยังไม่ได้เชื่อม Google Sheet")
+                    else:
+                        values=[list(out.columns)]+[[_s(v) for v in row] for row in out.values.tolist()]
+                        ws.clear(); ws.update(values=values, range_name="A1")
+                        st.cache_data.clear(); st.session_state["_fp_saved_rows"]=len(out); st.rerun()
+                except Exception as e:
+                    st.error(f"บันทึกไม่สำเร็จ: {e}")
+
 if "view" not in st.session_state: st.session_state["view"]="menu"
 if st.session_state["view"]=="menu":
     render_menu(); st.stop()
@@ -997,6 +1135,8 @@ if st.session_state["view"]=="remaining":
     render_remaining(); st.stop()
 if st.session_state["view"]=="actual":
     render_actual(); st.stop()
+if st.session_state["view"]=="punchlist_fp":
+    render_punchlist_fp(); st.stop()
 if st.session_state["view"]!="punchlist":
     render_placeholder(st.session_state["view"]); st.stop()
 
