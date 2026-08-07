@@ -211,6 +211,7 @@ _PLAN_TPL = r"""<meta charset="utf-8">
 #stage{position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform;}
 #plan{display:block;-webkit-user-select:none;user-select:none;pointer-events:none;}
 .mk{position:absolute;transform:translate(-50%,-50%);width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:14px;border:2.5px solid #fff;box-shadow:0 1px 5px rgba(0,0,0,.55);cursor:pointer;}
+.mk.mkpill{width:auto;height:auto;min-width:18px;padding:3px 9px;border-radius:13px;font-size:13px;line-height:1.1;white-space:nowrap;letter-spacing:.2px;text-shadow:0 1px 2px rgba(0,0,0,.45);}
 .mk:hover{box-shadow:0 0 0 4px rgba(0,0,0,.22),0 1px 5px rgba(0,0,0,.55);}
 .mk.focusmk{z-index:4;animation:fpulse 1.15s ease-in-out infinite;}
 @keyframes fpulse{0%,100%{box-shadow:0 0 0 4px rgba(255,90,0,.85),0 0 0 9px rgba(255,90,0,.28),0 1px 5px rgba(0,0,0,.55);}50%{box-shadow:0 0 0 6px rgba(255,90,0,.95),0 0 0 15px rgba(255,90,0,.16),0 1px 5px rgba(0,0,0,.55);}}
@@ -244,6 +245,7 @@ function showCard(p){card.style.display='block';
  '<b>หมายเหตุ:</b> '+esc(p.note||'–');
  card.querySelector('.x').onclick=function(e){e.stopPropagation();card.style.display='none';};}
 function build(){PTS.forEach(function(p){var m=document.createElement('div');m.className='mk';m.style.left=p.x+'%';m.style.top=p.y+'%';m.style.background=p.color;m.textContent=p.no;
+ if((''+p.no).length>4){m.classList.add('mkpill');}
  if(FOCUS!=null&&(''+p.no)===(''+FOCUS)){m.classList.add('focusmk');}
  m.onmouseenter=function(){bar.style.display='block';bar.innerHTML='<b>จุดที่ '+p.no+(p.nick?' ('+esc(p.nick)+')':'')+'</b> · '+p.icon+' '+esc(p.status)+' · '+esc(p.owner)+' · ครบ '+esc(p.due)+' ('+esc(p.days)+')';};
  m.onmouseleave=function(){bar.style.display='none';};
