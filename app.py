@@ -1013,6 +1013,50 @@ def render_actual():
 
 # ===================== การ์ด Punchlist FP · Multipurpose (ชุดแยก) =====================
 FP_WS = "PunchlistFP"
+SP_IMPORT_ROWS=[
+  [0, 'E38.5-SP1', 'Multipurpose', 'FP', 'FP Multi (SP)', '68031 FP Multi', '2', '', '', '', '', 'E38.5 (AHU/FAN)', 'ติดตั้งหัวสปริงเกอร์ (sprinkler head) · Grid 22-23/A-C', 'รอดำเนินการ', '', 'อยู่ในบริเวณจุด 3.3 (E38.5) · ref 68031 FP Multi'],
+  [0, 'E38.5-SP2', 'Multipurpose', 'FP', 'FP Multi (SP)', '68031 FP Multi', '2', '', '', '', '', 'E38.5 (AHU/FAN)', 'ติดตั้งหัวสปริงเกอร์ (sprinkler head) · Grid 22-23/A-C', 'รอดำเนินการ', '', 'อยู่ในบริเวณจุด 3.3 (E38.5) · ref 68031 FP Multi'],
+  [0, 'E38.5-SP3', 'Multipurpose', 'FP', 'FP Multi (SP)', '68031 FP Multi', '2', '', '', '', '', 'E38.5 (AHU/FAN)', 'ติดตั้งหัวสปริงเกอร์ (sprinkler head) · Grid 22-23/A-C', 'รอดำเนินการ', '', 'อยู่ในบริเวณจุด 3.3 (E38.5) · ref 68031 FP Multi'],
+  [0, 'E38.5-SP4', 'Multipurpose', 'FP', 'FP Multi (SP)', '68031 FP Multi', '2', '', '', '', '', 'E38.5 (AHU/FAN)', 'ติดตั้งหัวสปริงเกอร์ (sprinkler head) · Grid 22-23/A-C', 'รอดำเนินการ', '', 'อยู่ในบริเวณจุด 3.3 (E38.5) · ref 68031 FP Multi'],
+  [0, 'E38.5-SP5', 'Multipurpose', 'FP', 'FP Multi (SP)', '68031 FP Multi', '2', '', '', '', '', 'E38.5 (AHU/FAN)', 'ติดตั้งหัวสปริงเกอร์ (sprinkler head) · Grid 22-23/A-C', 'รอดำเนินการ', '', 'อยู่ในบริเวณจุด 3.3 (E38.5) · ref 68031 FP Multi'],
+  [0, 'E38.5-SP6', 'Multipurpose', 'FP', 'FP Multi (SP)', '68031 FP Multi', '2', '', '', '', '', 'E38.5 (AHU/FAN)', 'ติดตั้งหัวสปริงเกอร์ (sprinkler head) · Grid 22-23/A-C', 'รอดำเนินการ', '', 'อยู่ในบริเวณจุด 3.3 (E38.5) · ref 68031 FP Multi'],
+  [0, 'E38.5-SP7', 'Multipurpose', 'FP', 'FP Multi (SP)', '68031 FP Multi', '2', '', '', '', '', 'E38.5 (AHU/FAN)', 'ติดตั้งหัวสปริงเกอร์ (sprinkler head) · Grid 22-23/A-C', 'รอดำเนินการ', '', 'อยู่ในบริเวณจุด 3.3 (E38.5) · ref 68031 FP Multi'],
+  [0, 'E38.5-SP8', 'Multipurpose', 'FP', 'FP Multi (SP)', '68031 FP Multi', '2', '', '', '', '', 'E38.5 (AHU/FAN)', 'ติดตั้งหัวสปริงเกอร์ (sprinkler head) · Grid 22-23/A-C', 'รอดำเนินการ', '', 'อยู่ในบริเวณจุด 3.3 (E38.5) · ref 68031 FP Multi'],
+  [0, 'E38.5-SP9', 'Multipurpose', 'FP', 'FP Multi (SP)', '68031 FP Multi', '2', '', '', '', '', 'E38.5 (AHU/FAN)', 'ติดตั้งหัวสปริงเกอร์ (sprinkler head) · Grid 22-23/A-C', 'รอดำเนินการ', '', 'อยู่ในบริเวณจุด 3.3 (E38.5) · ref 68031 FP Multi'],
+  [0, 'E38.5-SP10', 'Multipurpose', 'FP', 'FP Multi (SP)', '68031 FP Multi', '2', '', '', '', '', 'E38.5 (AHU/FAN)', 'ติดตั้งหัวสปริงเกอร์ (sprinkler head) · Grid 22-23/A-C', 'รอดำเนินการ', '', 'อยู่ในบริเวณจุด 3.3 (E38.5) · ref 68031 FP Multi'],
+  [0, 'E38.5-SP11', 'Multipurpose', 'FP', 'FP Multi (SP)', '68031 FP Multi', '2', '', '', '', '', 'E38.5 (AHU/FAN)', 'ติดตั้งหัวสปริงเกอร์ (sprinkler head) · Grid 22-23/A-C', 'รอดำเนินการ', '', 'อยู่ในบริเวณจุด 3.3 (E38.5) · ref 68031 FP Multi'],
+  [0, 'E38.5-SP12', 'Multipurpose', 'FP', 'FP Multi (SP)', '68031 FP Multi', '2', '', '', '', '', 'E38.5 (AHU/FAN)', 'ติดตั้งหัวสปริงเกอร์ (sprinkler head) · Grid 22-23/A-C', 'รอดำเนินการ', '', 'อยู่ในบริเวณจุด 3.3 (E38.5) · ref 68031 FP Multi'],
+  [0, 'E38.5-SP13', 'Multipurpose', 'FP', 'FP Multi (SP)', '68031 FP Multi', '2', '', '', '', '', 'E38.5 (AHU/FAN)', 'ติดตั้งหัวสปริงเกอร์ (sprinkler head) · Grid 22-23/A-C', 'รอดำเนินการ', '', 'อยู่ในบริเวณจุด 3.3 (E38.5) · ref 68031 FP Multi'],
+  [0, 'E38.5-SP14', 'Multipurpose', 'FP', 'FP Multi (SP)', '68031 FP Multi', '2', '', '', '', '', 'E38.5 (AHU/FAN)', 'ติดตั้งหัวสปริงเกอร์ (sprinkler head) · Grid 22-23/A-C', 'รอดำเนินการ', '', 'อยู่ในบริเวณจุด 3.3 (E38.5) · ref 68031 FP Multi'],
+  [0, 'E9.3-SP1', 'Multipurpose', 'FP', 'FP Multi (SP)', '68031 FP Multi', '3', '', '', '', '', 'E9.3 (SUMP PUMP ROOM)', 'ติดตั้งหัวสปริงเกอร์ (sprinkler head) · Grid 1.1-3.1/A1-B1', 'รอดำเนินการ', '', 'อยู่ในบริเวณจุด 3.4 (E9.3) · ref 68031 FP Multi'],
+  [0, 'E9.3-SP2', 'Multipurpose', 'FP', 'FP Multi (SP)', '68031 FP Multi', '3', '', '', '', '', 'E9.3 (SUMP PUMP ROOM)', 'ติดตั้งหัวสปริงเกอร์ (sprinkler head) · Grid 1.1-3.1/A1-B1', 'รอดำเนินการ', '', 'อยู่ในบริเวณจุด 3.4 (E9.3) · ref 68031 FP Multi'],
+  [0, 'E9.3-SP3', 'Multipurpose', 'FP', 'FP Multi (SP)', '68031 FP Multi', '3', '', '', '', '', 'E9.3 (SUMP PUMP ROOM)', 'ติดตั้งหัวสปริงเกอร์ (sprinkler head) · Grid 1.1-3.1/A1-B1', 'รอดำเนินการ', '', 'อยู่ในบริเวณจุด 3.4 (E9.3) · ref 68031 FP Multi'],
+  [0, 'E17.16-SP1', 'Multipurpose', 'FP', 'FP Multi (SP)', '68031 FP Multi', '4', '', '', '', '', 'E17.16 (ESCAPE ROUTE)', 'ติดตั้งหัวสปริงเกอร์ (sprinkler head) · Grid 3.4-5.4/A4-B4', 'รอดำเนินการ', '', 'อยู่ในบริเวณจุด 3.5 (E17.16) · ref 68031 FP Multi'],
+  [0, 'E17.16-SP2', 'Multipurpose', 'FP', 'FP Multi (SP)', '68031 FP Multi', '4', '', '', '', '', 'E17.16 (ESCAPE ROUTE)', 'ติดตั้งหัวสปริงเกอร์ (sprinkler head) · Grid 3.4-5.4/A4-B4', 'รอดำเนินการ', '', 'อยู่ในบริเวณจุด 3.5 (E17.16) · ref 68031 FP Multi'],
+  [0, 'E17.16-SP3', 'Multipurpose', 'FP', 'FP Multi (SP)', '68031 FP Multi', '4', '', '', '', '', 'E17.16 (ESCAPE ROUTE)', 'ติดตั้งหัวสปริงเกอร์ (sprinkler head) · Grid 3.4-5.4/A4-B4', 'รอดำเนินการ', '', 'อยู่ในบริเวณจุด 3.5 (E17.16) · ref 68031 FP Multi'],
+  [0, 'E17.16-SP4', 'Multipurpose', 'FP', 'FP Multi (SP)', '68031 FP Multi', '4', '', '', '', '', 'E17.16 (ESCAPE ROUTE)', 'ติดตั้งหัวสปริงเกอร์ (sprinkler head) · Grid 3.4-5.4/A4-B4', 'รอดำเนินการ', '', 'อยู่ในบริเวณจุด 3.5 (E17.16) · ref 68031 FP Multi'],
+  [0, 'E17.16-SP5', 'Multipurpose', 'FP', 'FP Multi (SP)', '68031 FP Multi', '4', '', '', '', '', 'E17.16 (ESCAPE ROUTE)', 'ติดตั้งหัวสปริงเกอร์ (sprinkler head) · Grid 3.4-5.4/A4-B4', 'รอดำเนินการ', '', 'อยู่ในบริเวณจุด 3.5 (E17.16) · ref 68031 FP Multi'],
+  [0, 'E17.16-SP6', 'Multipurpose', 'FP', 'FP Multi (SP)', '68031 FP Multi', '4', '', '', '', '', 'E17.16 (ESCAPE ROUTE)', 'ติดตั้งหัวสปริงเกอร์ (sprinkler head) · Grid 3.4-5.4/A4-B4', 'รอดำเนินการ', '', 'อยู่ในบริเวณจุด 3.5 (E17.16) · ref 68031 FP Multi'],
+  [0, 'E17.16-SP7', 'Multipurpose', 'FP', 'FP Multi (SP)', '68031 FP Multi', '4', '', '', '', '', 'E17.16 (ESCAPE ROUTE)', 'ติดตั้งหัวสปริงเกอร์ (sprinkler head) · Grid 3.4-5.4/A4-B4', 'รอดำเนินการ', '', 'อยู่ในบริเวณจุด 3.5 (E17.16) · ref 68031 FP Multi'],
+  [0, 'E17.2-SP1', 'Multipurpose', 'FP', 'FP Multi (SP)', '68031 FP Multi', '4', '', '', '', '', 'E17.2 (TES FAN ROOM)', 'ติดตั้งหัวสปริงเกอร์ (sprinkler head) · Grid 3.4-5.4/A4-B4', 'รอดำเนินการ', '', 'อยู่ในบริเวณจุด 3.6 (E17.2) · ref 68031 FP Multi'],
+  [0, 'E17.2-SP2', 'Multipurpose', 'FP', 'FP Multi (SP)', '68031 FP Multi', '4', '', '', '', '', 'E17.2 (TES FAN ROOM)', 'ติดตั้งหัวสปริงเกอร์ (sprinkler head) · Grid 3.4-5.4/A4-B4', 'รอดำเนินการ', '', 'อยู่ในบริเวณจุด 3.6 (E17.2) · ref 68031 FP Multi'],
+  [0, 'E17.2-SP3', 'Multipurpose', 'FP', 'FP Multi (SP)', '68031 FP Multi', '4', '', '', '', '', 'E17.2 (TES FAN ROOM)', 'ติดตั้งหัวสปริงเกอร์ (sprinkler head) · Grid 3.4-5.4/A4-B4', 'รอดำเนินการ', '', 'อยู่ในบริเวณจุด 3.6 (E17.2) · ref 68031 FP Multi'],
+  [0, 'E17.2-SP4', 'Multipurpose', 'FP', 'FP Multi (SP)', '68031 FP Multi', '4', '', '', '', '', 'E17.2 (TES FAN ROOM)', 'ติดตั้งหัวสปริงเกอร์ (sprinkler head) · Grid 3.4-5.4/A4-B4', 'รอดำเนินการ', '', 'อยู่ในบริเวณจุด 3.6 (E17.2) · ref 68031 FP Multi'],
+  [0, 'E17.2-SP5', 'Multipurpose', 'FP', 'FP Multi (SP)', '68031 FP Multi', '4', '', '', '', '', 'E17.2 (TES FAN ROOM)', 'ติดตั้งหัวสปริงเกอร์ (sprinkler head) · Grid 3.4-5.4/A4-B4', 'รอดำเนินการ', '', 'อยู่ในบริเวณจุด 3.6 (E17.2) · ref 68031 FP Multi'],
+  [0, 'E17.2-SP6', 'Multipurpose', 'FP', 'FP Multi (SP)', '68031 FP Multi', '4', '', '', '', '', 'E17.2 (TES FAN ROOM)', 'ติดตั้งหัวสปริงเกอร์ (sprinkler head) · Grid 3.4-5.4/A4-B4', 'รอดำเนินการ', '', 'อยู่ในบริเวณจุด 3.6 (E17.2) · ref 68031 FP Multi'],
+  [0, 'E17.2-SP7', 'Multipurpose', 'FP', 'FP Multi (SP)', '68031 FP Multi', '4', '', '', '', '', 'E17.2 (TES FAN ROOM)', 'ติดตั้งหัวสปริงเกอร์ (sprinkler head) · Grid 3.4-5.4/A4-B4', 'รอดำเนินการ', '', 'อยู่ในบริเวณจุด 3.6 (E17.2) · ref 68031 FP Multi'],
+  [0, 'E17.2-SP8', 'Multipurpose', 'FP', 'FP Multi (SP)', '68031 FP Multi', '4', '', '', '', '', 'E17.2 (TES FAN ROOM)', 'ติดตั้งหัวสปริงเกอร์ (sprinkler head) · Grid 3.4-5.4/A4-B4', 'รอดำเนินการ', '', 'อยู่ในบริเวณจุด 3.6 (E17.2) · ref 68031 FP Multi'],
+  [0, 'E17.2-SP9', 'Multipurpose', 'FP', 'FP Multi (SP)', '68031 FP Multi', '4', '', '', '', '', 'E17.2 (TES FAN ROOM)', 'ติดตั้งหัวสปริงเกอร์ (sprinkler head) · Grid 3.4-5.4/A4-B4', 'รอดำเนินการ', '', 'อยู่ในบริเวณจุด 3.6 (E17.2) · ref 68031 FP Multi'],
+  [0, 'E17.2-SP10', 'Multipurpose', 'FP', 'FP Multi (SP)', '68031 FP Multi', '4', '', '', '', '', 'E17.2 (TES FAN ROOM)', 'ติดตั้งหัวสปริงเกอร์ (sprinkler head) · Grid 3.4-5.4/A4-B4', 'รอดำเนินการ', '', 'อยู่ในบริเวณจุด 3.6 (E17.2) · ref 68031 FP Multi'],
+  [0, 'E17.2-SP11', 'Multipurpose', 'FP', 'FP Multi (SP)', '68031 FP Multi', '4', '', '', '', '', 'E17.2 (TES FAN ROOM)', 'ติดตั้งหัวสปริงเกอร์ (sprinkler head) · Grid 3.4-5.4/A4-B4', 'รอดำเนินการ', '', 'อยู่ในบริเวณจุด 3.6 (E17.2) · ref 68031 FP Multi'],
+  [0, 'E17.2-SP12', 'Multipurpose', 'FP', 'FP Multi (SP)', '68031 FP Multi', '4', '', '', '', '', 'E17.2 (TES FAN ROOM)', 'ติดตั้งหัวสปริงเกอร์ (sprinkler head) · Grid 3.4-5.4/A4-B4', 'รอดำเนินการ', '', 'อยู่ในบริเวณจุด 3.6 (E17.2) · ref 68031 FP Multi'],
+  [0, '20.20-SP1', 'Multipurpose', 'FP', 'FP Multi (SP)', '68031 FP Multi', '5', '', '', '', '', 'E20.2 / 20.20 (STAFF CORRIDOR MECH)', 'ติดตั้งหัวสปริงเกอร์ (sprinkler head) · Grid 17-19/A-C', 'รอดำเนินการ', '', 'อยู่ในบริเวณจุด 3.7 (20.20) · ref 68031 FP Multi'],
+  [0, '20.20-SP2', 'Multipurpose', 'FP', 'FP Multi (SP)', '68031 FP Multi', '5', '', '', '', '', 'E20.2 / 20.20 (STAFF CORRIDOR MECH)', 'ติดตั้งหัวสปริงเกอร์ (sprinkler head) · Grid 17-19/A-C', 'รอดำเนินการ', '', 'อยู่ในบริเวณจุด 3.7 (20.20) · ref 68031 FP Multi'],
+  [0, '20.20-SP3', 'Multipurpose', 'FP', 'FP Multi (SP)', '68031 FP Multi', '5', '', '', '', '', 'E20.2 / 20.20 (STAFF CORRIDOR MECH)', 'ติดตั้งหัวสปริงเกอร์ (sprinkler head) · Grid 17-19/A-C', 'รอดำเนินการ', '', 'อยู่ในบริเวณจุด 3.7 (20.20) · ref 68031 FP Multi'],
+  [0, '20.20-SP4', 'Multipurpose', 'FP', 'FP Multi (SP)', '68031 FP Multi', '5', '', '', '', '', 'E20.2 / 20.20 (STAFF CORRIDOR MECH)', 'ติดตั้งหัวสปริงเกอร์ (sprinkler head) · Grid 17-19/A-C', 'รอดำเนินการ', '', 'อยู่ในบริเวณจุด 3.7 (20.20) · ref 68031 FP Multi'],
+  [0, '20.20-SP5', 'Multipurpose', 'FP', 'FP Multi (SP)', '68031 FP Multi', '5', '', '', '', '', 'E20.2 / 20.20 (STAFF CORRIDOR MECH)', 'ติดตั้งหัวสปริงเกอร์ (sprinkler head) · Grid 17-19/A-C', 'รอดำเนินการ', '', 'อยู่ในบริเวณจุด 3.7 (20.20) · ref 68031 FP Multi'],
+  [0, '20.20-SP6', 'Multipurpose', 'FP', 'FP Multi (SP)', '68031 FP Multi', '5', '', '', '', '', 'E20.2 / 20.20 (STAFF CORRIDOR MECH)', 'ติดตั้งหัวสปริงเกอร์ (sprinkler head) · Grid 17-19/A-C', 'รอดำเนินการ', '', 'อยู่ในบริเวณจุด 3.7 (20.20) · ref 68031 FP Multi'],
+]
 FHC_IMPORT_ROWS=[
   [8, 'FHC-01M', 'Multipurpose', 'FP', 'FP Multi', '1-PP18-FP-1301-01', 1, '', '', '', '', 'E1.2', 'ตู้ดับเพลิง (FHC)', 'รอดำเนินการ', '', ''],
   [9, 'FHC-02M', 'Multipurpose', 'FP', 'FP Multi', '1-PP18-FP-1305-01', 5, '', '', '', '', '', 'ตู้ดับเพลิง (FHC)', 'รอดำเนินการ', '', ''],
@@ -1146,6 +1190,7 @@ def render_punchlist_fp():
             try: nlist.append(int(float(s)))
             except Exception: continue
         nlist=sorted(set(nlist))
+        nlist=[n for n in nlist if str(n) in meta_t.get("points",{})]  # โชว์ปุ่มเฉพาะจุดที่มีหมุดบนแบบ
         if nlist and meta_t.get("points"):
             st.markdown("**🔎 กดเลขจุดเพื่อเปิดแบบแปลนของจุดนั้น** (ระบบจะซูมไปที่หมุดให้อัตโนมัติ)")
             per=7
@@ -1265,43 +1310,30 @@ def render_punchlist_fp():
                     except Exception as e:
                         st.error(f"นำเข้าไม่สำเร็จ: {e}")
         st.divider()
-        with st.expander("📋 ใส่รายละเอียดหัวสปริงเกอร์ (SP) ลงจุด 3.3–3.7 — กดครั้งเดียว"):
-            st.caption("เพิ่มจำนวน+รายชื่อหัวสปริงเกอร์ (จากตาราง FP Multi) ลงช่อง 'รายละเอียดงาน' ของจุด 3.3–3.7 · ต้องใส่ PIN")
-            _SPD={
-             "3.3":"หัวสปริงเกอร์ (SP) 14 หัว: E38.5-SP1…SP14 · Grid 22-23/A-C",
-             "3.4":"หัวสปริงเกอร์ (SP) 3 หัว: E9.3-SP1…SP3 · Grid 1.1-3.1/A1-B1",
-             "3.5":"หัวสปริงเกอร์ (SP) 7 หัว: E17.16-SP1…SP7 · Grid 3.4-5.4/A4-B4",
-             "3.6":"หัวสปริงเกอร์ (SP) 12 หัว: E17.2-SP1…SP12 · Grid 3.4-5.4/A4-B4",
-             "3.7":"หัวสปริงเกอร์ (SP) 6 หัว: 20.20-SP1…SP6 · Grid 17-19/A-C",
-            }
-            _sp2=st.text_input("PIN", type="password", key="fp_spd_pin", label_visibility="collapsed", placeholder="ใส่ PIN เพื่อบันทึกรายละเอียด")
-            if st.button("📋 ใส่รายละเอียด SP (จุด 3.3–3.7)", key="fp_spd_btn", use_container_width=True):
-                if pin_bad(_sp2): st.error("PIN ไม่ถูกต้อง")
+        with st.expander(f"🚿 นำเข้าหัวสปริงเกอร์ (SP) จากตาราง FP Multi ({len(SP_IMPORT_ROWS)} หัว) — กดครั้งเดียว"):
+            st.caption("เพิ่มหัวสปริงเกอร์เป็นรายการติดตามสถานะรายหัว (กันซ้ำด้วยชื่อ) · จัดกลุ่มตามบริเวณ E38.5/E9.3/E17.16/E17.2/20.20 · ต้องใส่ PIN")
+            _spip=st.text_input("PIN นำเข้า SP", type="password", key="fp_spimport_pin", label_visibility="collapsed", placeholder="ใส่ PIN เพื่อนำเข้า")
+            if st.button(f"🚿 นำเข้าหัวสปริงเกอร์ {len(SP_IMPORT_ROWS)} หัว", key="fp_spimport_btn", use_container_width=True):
+                if pin_bad(_spip): st.error("PIN ไม่ถูกต้อง")
                 else:
                     try:
                         ws=get_ws(FP_WS)
                         if ws is None: st.error("ยังไม่ได้เชื่อม Google Sheet")
                         else:
-                            vals=ws.get_all_values()
-                            if not vals: st.error("ยังไม่มีข้อมูลในชีต")
+                            cur=pd.DataFrame(ws.get_all_records())
+                            have=set(cur[C_NICK].astype(str).str.strip()) if (len(cur) and C_NICK in cur.columns) else set()
+                            _nums=pd.to_numeric(cur[C_NO],errors="coerce").dropna() if (len(cur) and C_NO in cur.columns) else pd.Series([],dtype=float)
+                            _nxt=int(_nums.max())+1 if len(_nums) else 1
+                            add=[]
+                            for _r in SP_IMPORT_ROWS:
+                                if str(_r[1]).strip() in have: continue
+                                _rr=list(_r); _rr[0]=_nxt; _nxt+=1; add.append([_s(v) for v in _rr])
+                            if not add: st.info("มีครบแล้ว ไม่มีหัวใหม่ให้เพิ่ม ✓")
                             else:
-                                hdr=vals[0]
-                                ic=hdr.index(C_NICK) if C_NICK in hdr else 1
-                                dc=hdr.index(C_DETAIL) if C_DETAIL in hdr else 12
-                                done=0
-                                for _ri,_row in enumerate(vals[1:], start=2):
-                                    _code=(_row[ic].strip() if ic<len(_row) else "")
-                                    if _code in _SPD:
-                                        _cur=(_row[dc] if dc<len(_row) else "")
-                                        if "หัวสปริงเกอร์" in _cur: continue
-                                        _newv=((_cur+" · ") if _cur.strip() else "")+_SPD[_code]
-                                        ws.update_cell(_ri, dc+1, _newv); done+=1
-                                if done:
-                                    st.cache_data.clear(); st.session_state["_fp_saved_rows"]=done; st.rerun()
-                                else:
-                                    st.info("ใส่รายละเอียดครบแล้ว ✓")
+                                ws.append_rows(add, value_input_option="RAW")
+                                st.cache_data.clear(); st.session_state["_fp_saved_rows"]=len(add); st.rerun()
                     except Exception as e:
-                        st.error(f"บันทึกรายละเอียดไม่สำเร็จ: {e}")
+                        st.error(f"นำเข้าไม่สำเร็จ: {e}")
 
 if "view" not in st.session_state: st.session_state["view"]="menu"
 if st.session_state["view"]=="menu":
