@@ -1238,8 +1238,14 @@ def render_punchlist_fp():
                 r=df[df[C_NO].astype(str).str.strip()==str(n)]
                 v=str(r.iloc[0][C_NICK]).strip() if len(r) else ""
                 return v or str(n)
-            opts={f"{p['file']} · หน้า {p['page']}  ({len(p['nos'])} จุด: {', '.join(_code(n) for n in p['nos'])})":p for p in meta["plans"]}
-            lab=st.selectbox("เลือกแบบแปลน (เฉพาะหน้าที่มีจุด)", list(opts.keys()), key="fp_plansel")
+            opts={}
+            for p in meta["plans"]:
+                if p.get("nos"):
+                    _lbl=f"{p['file']} · หน้า {p['page']}  ({len(p['nos'])} จุด: {', '.join(_code(n) for n in p['nos'])})"
+                else:
+                    _lbl=f"{p['file']}  · 🖼️ ดูจุดในแบบ (label ในแบบ)"
+                opts[_lbl]=p
+            lab=st.selectbox("เลือกแบบแปลน", list(opts.keys()), key="fp_plansel")
             plan=opts[lab]
             dmap={int(r[C_NO]):r for _,r in df.iterrows() if str(r[C_NO]).strip() not in ("","nan")}
             pts=[]
