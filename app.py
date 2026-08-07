@@ -1011,6 +1011,46 @@ def render_actual():
 
 # ===================== การ์ด Punchlist FP · Multipurpose (ชุดแยก) =====================
 FP_WS = "PunchlistFP"
+FHC_IMPORT_ROWS=[
+  [8, 'FHC-01M', 'Multipurpose', 'FP', 'FP Multi', '1-PP18-FP-1301-01', 1, '', '', '', '', 'E1.2', 'ตู้ดับเพลิง (FHC)', 'รอดำเนินการ', '', ''],
+  [9, 'FHC-02M', 'Multipurpose', 'FP', 'FP Multi', '1-PP18-FP-1305-01', 5, '', '', '', '', '', 'ตู้ดับเพลิง (FHC)', 'รอดำเนินการ', '', ''],
+  [10, 'FHC-03M', 'Multipurpose', 'FP', 'FP Multi', '1-PP18-FP-1305-01', 5, '', '', '', '', 'E9.3', 'ตู้ดับเพลิง (FHC)', 'รอดำเนินการ', '', ''],
+  [11, 'FHC-04M', 'Multipurpose', 'FP', 'FP Multi', '1-PP18-FP-1308-01', 8, '', '', '', '', '', 'ตู้ดับเพลิง (FHC)', 'รอดำเนินการ', '', ''],
+  [12, 'FHC-05M', 'Multipurpose', 'FP', 'FP Multi', '1-PP18-FP-1302-01', 2, '', '', '', '', '', 'ตู้ดับเพลิง (FHC)', 'รอดำเนินการ', '', ''],
+  [13, 'FHC-06M', 'Multipurpose', 'FP', 'FP Multi', '1-PP18-FP-1302-01', 2, '', '', '', '', '', 'ตู้ดับเพลิง (FHC)', 'รอดำเนินการ', '', ''],
+  [14, 'FHC-07M', 'Multipurpose', 'FP', 'FP Multi', '1-PP18-FP-1302-01', 2, '', '', '', '', '', 'ตู้ดับเพลิง (FHC)', 'รอดำเนินการ', '', ''],
+  [15, 'FHC-08M', 'Multipurpose', 'FP', 'FP Multi', '1-PP18-FP-1303-01', 3, '', '', '', '', '', 'ตู้ดับเพลิง (FHC)', 'รอดำเนินการ', '', ''],
+  [16, 'FHC-09M', 'Multipurpose', 'FP', 'FP Multi', '1-PP18-FP-1303-01', 3, '', '', '', '', 'E27.6', 'ตู้ดับเพลิง (FHC)', 'รอดำเนินการ', '', ''],
+  [17, 'FHC-10M', 'Multipurpose', 'FP', 'FP Multi', '1-PP18-FP-1304-01', 4, '', '', '', '', '', 'ตู้ดับเพลิง (FHC)', 'รอดำเนินการ', '', ''],
+  [18, 'FHC-11M', 'Multipurpose', 'FP', 'FP Multi', '1-PP18-FP-1304-01', 4, '', '', '', '', '', 'ตู้ดับเพลิง (FHC)', 'รอดำเนินการ', '', ''],
+  [19, 'FHC-12M', 'Multipurpose', 'FP', 'FP Multi', '1-PP18-FP-1306-01', 6, '', '', '', '', '', 'ตู้ดับเพลิง (FHC)', 'รอดำเนินการ', '', ''],
+  [20, 'FHC-13M', 'Multipurpose', 'FP', 'FP Multi', '1-PP18-FP-1304-01', 4, '', '', '', '', 'E34.16', 'ตู้ดับเพลิง (FHC)', 'รอดำเนินการ', '', ''],
+  [21, 'FHC-14M', 'Multipurpose', 'FP', 'FP Multi', '1-PP18-FP-1307-01', 7, '', '', '', '', '', 'ตู้ดับเพลิง (FHC)', 'รอดำเนินการ', '', ''],
+  [22, 'FHC-01UP', 'Upper Platform', 'FP', 'FP Upper', '1-PP18-FP-1601-01', 1, '', '', '', '', 'E4.3', 'ตู้ดับเพลิง (FHC)', 'รอดำเนินการ', '', 'ป้ายในแบบเขียน HSC'],
+  [23, 'FHC-02UP', 'Upper Platform', 'FP', 'FP Upper', '1-PP18-FP-1601-01', 1, '', '', '', '', 'E38.3', 'ตู้ดับเพลิง (FHC)', 'รอดำเนินการ', '', ''],
+  [24, 'FHC-03UP', 'Upper Platform', 'FP', 'FP Upper', '1-PP18-FP-1601-01', 1, '', '', '', '', 'E33.1', 'ตู้ดับเพลิง (FHC)', 'รอดำเนินการ', '', ''],
+  [25, 'FHC-04UP', 'Upper Platform', 'FP', 'FP Upper', '1-PP18-FP-1602-01', 2, '', '', '', '', 'E38.3', 'ตู้ดับเพลิง (FHC)', 'รอดำเนินการ', '', ''],
+  [26, 'FHC-05UP', 'Upper Platform', 'FP', 'FP Upper', '1-PP18-FP-1602-01', 2, '', '', '', '', 'E38.3', 'ตู้ดับเพลิง (FHC)', 'รอดำเนินการ', '', ''],
+  [27, 'FHC-06UP', 'Upper Platform', 'FP', 'FP Upper', '1-PP18-FP-1602-01', 2, '', '', '', '', '', 'ตู้ดับเพลิง (FHC)', 'รอดำเนินการ', '', 'ไม่มีเลขในแบบ กำหนดตามลำดับ'],
+  [28, 'FHC-07UP', 'Upper Platform', 'FP', 'FP Upper', '1-PP18-FP-1602-01', 2, '', '', '', '', 'E38.3', 'ตู้ดับเพลิง (FHC)', 'รอดำเนินการ', '', ''],
+  [29, 'FHC-08UP', 'Upper Platform', 'FP', 'FP Upper', '1-PP18-FP-1603-01', 3, '', '', '', '', '', 'ตู้ดับเพลิง (FHC)', 'รอดำเนินการ', '', ''],
+  [30, 'FHC-09UP', 'Upper Platform', 'FP', 'FP Upper', '1-PP18-FP-1603-01', 3, '', '', '', '', 'E38.3', 'ตู้ดับเพลิง (FHC)', 'รอดำเนินการ', '', 'ไม่มีเลขในแบบ กำหนดตามลำดับ'],
+  [31, 'FHC-10UP', 'Upper Platform', 'FP', 'FP Upper', '1-PP18-FP-1603-01', 3, '', '', '', '', '', 'ตู้ดับเพลิง (FHC)', 'รอดำเนินการ', '', ''],
+  [32, 'FHC-11UP', 'Upper Platform', 'FP', 'FP Upper', '1-PP18-FP-1603-01', 3, '', '', '', '', '', 'ตู้ดับเพลิง (FHC)', 'รอดำเนินการ', '', ''],
+  [33, 'FHC-12UP', 'Upper Platform', 'FP', 'FP Upper', '1-PP18-FP-1604-01', 4, '', '', '', '', 'E29.2', 'ตู้ดับเพลิง (FHC)', 'รอดำเนินการ', '', ''],
+  [34, 'FHC-13UP', 'Upper Platform', 'FP', 'FP Upper', '1-PP18-FP-1604-01', 4, '', '', '', '', 'E15.4', 'ตู้ดับเพลิง (FHC)', 'รอดำเนินการ', '', ''],
+  [35, 'FHC-01C', 'Concourse', 'FP', 'FP CC', '1-PP18-FP-1501-01', 1, '', '', '', '', 'E38.6', 'ตู้ดับเพลิง (FHC)', 'รอดำเนินการ', '', ''],
+  [36, 'FHC-02C', 'Concourse', 'FP', 'FP CC', '1-PP18-FP-1501-01', 1, '', '', '', '', 'E27.5', 'ตู้ดับเพลิง (FHC)', 'รอดำเนินการ', '', ''],
+  [37, 'FHC-03C', 'Concourse', 'FP', 'FP CC', '1-PP18-FP-1501-01', 1, '', '', '', '', 'E35.13', 'ตู้ดับเพลิง (FHC)', 'รอดำเนินการ', '', ''],
+  [38, 'FHC-04C', 'Concourse', 'FP', 'FP CC', '1-PP18-FP-1506-01', 6, '', '', '', '', 'E35.13', 'ตู้ดับเพลิง (FHC)', 'รอดำเนินการ', '', ''],
+  [39, 'FHC-05C', 'Concourse', 'FP', 'FP CC', '1-PP18-FP-1502-01', 2, '', '', '', '', '', 'ตู้ดับเพลิง (FHC)', 'รอดำเนินการ', '', ''],
+  [40, 'FHC-06C', 'Concourse', 'FP', 'FP CC', '1-PP18-FP-1502-01', 2, '', '', '', '', '', 'ตู้ดับเพลิง (FHC)', 'รอดำเนินการ', '', ''],
+  [41, 'FHC-07C', 'Concourse', 'FP', 'FP CC', '1-PP18-FP-1503-01', 3, '', '', '', '', '', 'ตู้ดับเพลิง (FHC)', 'รอดำเนินการ', '', ''],
+  [42, 'FHC-08C', 'Concourse', 'FP', 'FP CC', '1-PP18-FP-1503-01', 3, '', '', '', '', '', 'ตู้ดับเพลิง (FHC)', 'รอดำเนินการ', '', ''],
+  [43, 'FHC-09C', 'Concourse', 'FP', 'FP CC', '1-PP18-FP-1504-01', 4, '', '', '', '', 'E24.7', 'ตู้ดับเพลิง (FHC)', 'รอดำเนินการ', '', ''],
+  [44, 'FHC-10C', 'Concourse', 'FP', 'FP CC', '1-PP18-FP-1504-01', 4, '', '', '', '', 'E1.1', 'ตู้ดับเพลิง (FHC)', 'รอดำเนินการ', '', ''],
+  [45, 'FHC-11C', 'Concourse', 'FP', 'FP CC', '1-PP18-FP-1505-01', 5, '', '', '', '', '', 'ตู้ดับเพลิง (FHC)', 'รอดำเนินการ', '', ''],
+]
 
 @st.cache_data(ttl=60, show_spinner=False)
 def load_raw_fp(wsname):
@@ -1197,6 +1237,31 @@ def render_punchlist_fp():
                         st.cache_data.clear(); st.session_state["_fp_saved_rows"]=len(out); st.rerun()
                 except Exception as e:
                     st.error(f"บันทึกไม่สำเร็จ: {e}")
+        st.divider()
+        with st.expander(f"➕ นำเข้าตู้ดับเพลิง FHC จากแบบ FP ({len(FHC_IMPORT_ROWS)} จุด) — กดครั้งเดียว"):
+            st.caption("เพิ่มเฉพาะตู้ที่ยังไม่มีในตาราง (กันซ้ำด้วยรหัส FHC) · ต้องใส่ PIN เดียวกับบันทึก")
+            _ip=st.text_input("PIN นำเข้า", type="password", key="fp_import_pin", label_visibility="collapsed", placeholder="ใส่ PIN เพื่อนำเข้า")
+            if st.button(f"➕ นำเข้าตู้ FHC {len(FHC_IMPORT_ROWS)} จุด", key="fp_import_btn", use_container_width=True):
+                if pin_bad(_ip): st.error("PIN ไม่ถูกต้อง")
+                else:
+                    try:
+                        ws=get_ws(FP_WS)
+                        if ws is None: st.error("ยังไม่ได้เชื่อม Google Sheet")
+                        else:
+                            cur=pd.DataFrame(ws.get_all_records())
+                            have=set(cur[C_NICK].astype(str).str.strip()) if (len(cur) and C_NICK in cur.columns) else set()
+                            _nums=pd.to_numeric(cur[C_NO],errors="coerce").dropna() if (len(cur) and C_NO in cur.columns) else pd.Series([],dtype=float)
+                            _nxt=int(_nums.max())+1 if len(_nums) else 1
+                            add=[]
+                            for _r in FHC_IMPORT_ROWS:
+                                if str(_r[1]).strip() in have: continue
+                                _rr=list(_r); _rr[0]=_nxt; _nxt+=1; add.append([_s(v) for v in _rr])
+                            if not add: st.info("มีครบแล้ว ไม่มีจุดใหม่ให้เพิ่ม ✓")
+                            else:
+                                ws.append_rows(add, value_input_option="RAW")
+                                st.cache_data.clear(); st.session_state["_fp_saved_rows"]=len(add); st.rerun()
+                    except Exception as e:
+                        st.error(f"นำเข้าไม่สำเร็จ: {e}")
 
 if "view" not in st.session_state: st.session_state["view"]="menu"
 if st.session_state["view"]=="menu":
