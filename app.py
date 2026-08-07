@@ -1264,6 +1264,44 @@ def render_punchlist_fp():
                                 st.cache_data.clear(); st.session_state["_fp_saved_rows"]=len(add); st.rerun()
                     except Exception as e:
                         st.error(f"นำเข้าไม่สำเร็จ: {e}")
+        st.divider()
+        with st.expander("📋 ใส่รายละเอียดหัวสปริงเกอร์ (SP) ลงจุด 3.3–3.7 — กดครั้งเดียว"):
+            st.caption("เพิ่มจำนวน+รายชื่อหัวสปริงเกอร์ (จากตาราง FP Multi) ลงช่อง 'รายละเอียดงาน' ของจุด 3.3–3.7 · ต้องใส่ PIN")
+            _SPD={
+             "3.3":"หัวสปริงเกอร์ (SP) 14 หัว: E38.5-SP1…SP14 · Grid 22-23/A-C",
+             "3.4":"หัวสปริงเกอร์ (SP) 3 หัว: E9.3-SP1…SP3 · Grid 1.1-3.1/A1-B1",
+             "3.5":"หัวสปริงเกอร์ (SP) 7 หัว: E17.16-SP1…SP7 · Grid 3.4-5.4/A4-B4",
+             "3.6":"หัวสปริงเกอร์ (SP) 12 หัว: E17.2-SP1…SP12 · Grid 3.4-5.4/A4-B4",
+             "3.7":"หัวสปริงเกอร์ (SP) 6 หัว: 20.20-SP1…SP6 · Grid 17-19/A-C",
+            }
+            _sp2=st.text_input("PIN", type="password", key="fp_spd_pin", label_visibility="collapsed", placeholder="ใส่ PIN เพื่อบันทึกรายละเอียด")
+            if st.button("📋 ใส่รายละเอียด SP (จุด 3.3–3.7)", key="fp_spd_btn", use_container_width=True):
+                if pin_bad(_sp2): st.error("PIN ไม่ถูกต้อง")
+                else:
+                    try:
+                        ws=get_ws(FP_WS)
+                        if ws is None: st.error("ยังไม่ได้เชื่อม Google Sheet")
+                        else:
+                            vals=ws.get_all_values()
+                            if not vals: st.error("ยังไม่มีข้อมูลในชีต")
+                            else:
+                                hdr=vals[0]
+                                ic=hdr.index(C_NICK) if C_NICK in hdr else 1
+                                dc=hdr.index(C_DETAIL) if C_DETAIL in hdr else 12
+                                done=0
+                                for _ri,_row in enumerate(vals[1:], start=2):
+                                    _code=(_row[ic].strip() if ic<len(_row) else "")
+                                    if _code in _SPD:
+                                        _cur=(_row[dc] if dc<len(_row) else "")
+                                        if "หัวสปริงเกอร์" in _cur: continue
+                                        _newv=((_cur+" · ") if _cur.strip() else "")+_SPD[_code]
+                                        ws.update_cell(_ri, dc+1, _newv); done+=1
+                                if done:
+                                    st.cache_data.clear(); st.session_state["_fp_saved_rows"]=done; st.rerun()
+                                else:
+                                    st.info("ใส่รายละเอียดครบแล้ว ✓")
+                    except Exception as e:
+                        st.error(f"บันทึกรายละเอียดไม่สำเร็จ: {e}")
 
 if "view" not in st.session_state: st.session_state["view"]="menu"
 if st.session_state["view"]=="menu":
