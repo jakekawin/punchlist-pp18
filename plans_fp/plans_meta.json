@@ -251,6 +251,42 @@
    "nos": [
     45
    ]
+  },
+  {
+   "key": "spp2",
+   "file": "SP · E38.5 (AHU/FAN) · 14 หัว: E38.5-SP1…14",
+   "page": "SP",
+   "w": 2000,
+   "h": 2829,
+   "nos": [],
+   "imageonly": true
+  },
+  {
+   "key": "spp3",
+   "file": "SP · E9.3 (SUMP PUMP ROOM) · 3 หัว: E9.3-SP1…3",
+   "page": "SP",
+   "w": 2000,
+   "h": 2829,
+   "nos": [],
+   "imageonly": true
+  },
+  {
+   "key": "spp4",
+   "file": "SP · E17.16 (ESCAPE ROUTE) + E17.2 (TES FAN ROOM) · 7+12 หัว",
+   "page": "SP",
+   "w": 2000,
+   "h": 2829,
+   "nos": [],
+   "imageonly": true
+  },
+  {
+   "key": "spp5",
+   "file": "SP · 20.20 (STAFF CORRIDOR MECH) · 6 หัว: 20.20-SP1…6",
+   "page": "SP",
+   "w": 2000,
+   "h": 2829,
+   "nos": [],
+   "imageonly": true
   }
  ],
  "points": {
