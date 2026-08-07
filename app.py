@@ -212,6 +212,8 @@ _PLAN_TPL = r"""<meta charset="utf-8">
 #plan{display:block;-webkit-user-select:none;user-select:none;pointer-events:none;}
 .mk{position:absolute;transform:translate(-50%,-50%);width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:14px;border:2.5px solid #fff;box-shadow:0 1px 5px rgba(0,0,0,.55);cursor:pointer;}
 .mk:hover{box-shadow:0 0 0 4px rgba(0,0,0,.22),0 1px 5px rgba(0,0,0,.55);}
+.mk.focusmk{z-index:4;animation:fpulse 1.15s ease-in-out infinite;}
+@keyframes fpulse{0%,100%{box-shadow:0 0 0 4px rgba(255,90,0,.85),0 0 0 9px rgba(255,90,0,.28),0 1px 5px rgba(0,0,0,.55);}50%{box-shadow:0 0 0 6px rgba(255,90,0,.95),0 0 0 15px rgba(255,90,0,.16),0 1px 5px rgba(0,0,0,.55);}}
 #bar{position:absolute;left:10px;top:10px;right:10px;background:rgba(22,22,22,.88);color:#fff;padding:8px 12px;border-radius:8px;font-size:13px;display:none;z-index:5;pointer-events:none;}
 #card{position:absolute;right:10px;bottom:10px;width:min(360px,74%);max-height:80%;overflow:auto;background:#fff;border:1px solid #ccc;border-radius:10px;box-shadow:0 5px 20px rgba(0,0,0,.3);padding:14px 16px 16px;font-size:13.5px;line-height:1.55;display:none;z-index:6;}
 #card h4{margin:0 0 8px;font-size:15.5px;padding-right:20px;}
@@ -228,6 +230,7 @@ _PLAN_TPL = r"""<meta charset="utf-8">
 </div>
 <script>
 const PTS=__PTS__;
+const FOCUS=__FOCUS__;
 const wrap=document.getElementById('wrap'),stage=document.getElementById('stage'),plan=document.getElementById('plan'),bar=document.getElementById('bar'),card=document.getElementById('card');
 let scale=1,tx=0,ty=0;
 function apply(){stage.style.transform='translate('+tx+'px,'+ty+'px) scale('+scale+')';}
@@ -241,10 +244,20 @@ function showCard(p){card.style.display='block';
  '<b>หมายเหตุ:</b> '+esc(p.note||'–');
  card.querySelector('.x').onclick=function(e){e.stopPropagation();card.style.display='none';};}
 function build(){PTS.forEach(function(p){var m=document.createElement('div');m.className='mk';m.style.left=p.x+'%';m.style.top=p.y+'%';m.style.background=p.color;m.textContent=p.no;
+ if(FOCUS!=null&&(''+p.no)===(''+FOCUS)){m.classList.add('focusmk');}
  m.onmouseenter=function(){bar.style.display='block';bar.innerHTML='<b>จุดที่ '+p.no+(p.nick?' ('+esc(p.nick)+')':'')+'</b> · '+p.icon+' '+esc(p.status)+' · '+esc(p.owner)+' · ครบ '+esc(p.due)+' ('+esc(p.days)+')';};
  m.onmouseleave=function(){bar.style.display='none';};
  m.onclick=function(e){e.stopPropagation();showCard(p);};stage.appendChild(m);});}
-function initFit(){var ww=wrap.clientWidth,wh=wrap.clientHeight,iw=plan.naturalWidth,ih=plan.naturalHeight;if(!iw||!ww){return requestAnimationFrame(initFit);}var dw=ww,dh=ww*ih/iw;stage.style.width=dw+'px';stage.style.height=dh+'px';plan.style.width=dw+'px';plan.style.height=dh+'px';var s=Math.min(1,wh/dh);scale=s;tx=(ww-dw*s)/2;ty=(wh-dh*s)/2;apply();}
+function initFit(){var ww=wrap.clientWidth,wh=wrap.clientHeight,iw=plan.naturalWidth,ih=plan.naturalHeight;if(!iw||!ww){return requestAnimationFrame(initFit);}var dw=ww,dh=ww*ih/iw;stage.style.width=dw+'px';stage.style.height=dh+'px';plan.style.width=dw+'px';plan.style.height=dh+'px';var s=Math.min(1,wh/dh);scale=s;tx=(ww-dw*s)/2;ty=(wh-dh*s)/2;apply();tryFocus();}
+var focusDone=false;
+function tryFocus(){
+ if(FOCUS==null||focusDone)return;
+ var p=null;for(var i=0;i<PTS.length;i++){if((''+PTS[i].no)===(''+FOCUS)){p=PTS[i];break;}}
+ if(!p)return;
+ var ww=wrap.clientWidth,wh=wrap.clientHeight,dw=parseFloat(stage.style.width),dh=parseFloat(stage.style.height);
+ if(!dw||!dh||!ww)return;
+ var px=p.x/100*dw,py=p.y/100*dh,S=Math.max(scale,2.8);
+ scale=S;tx=ww/2-px*S;ty=wh/2-py*S;apply();focusDone=true;}
 plan.onload=initFit;initFit();
 function zoomAt(cx,cy,f){var ns=Math.min(9,Math.max(0.4,scale*f)),r=ns/scale;tx=cx-(cx-tx)*r;ty=cy-(cy-ty)*r;scale=ns;apply();}
 wrap.addEventListener('wheel',function(e){e.preventDefault();var b=wrap.getBoundingClientRect();zoomAt(e.clientX-b.left,e.clientY-b.top,e.deltaY<0?1.15:1/1.15);},{passive:false});
@@ -258,9 +271,11 @@ wrap.addEventListener('pointerup',function(){drag=false;});
 wrap.addEventListener('click',function(){card.style.display='none';});
 build();
 </script>"""
-def build_plan_html(img_url, pts, height=640):
+def build_plan_html(img_url, pts, height=640, focus=None):
     import json as _j
-    return _PLAN_TPL.replace("__H__",str(height)).replace("__IMG__",img_url).replace("__PTS__",_j.dumps(pts,ensure_ascii=False))
+    return (_PLAN_TPL.replace("__H__",str(height)).replace("__IMG__",img_url)
+            .replace("__PTS__",_j.dumps(pts,ensure_ascii=False))
+            .replace("__FOCUS__",_j.dumps(focus,ensure_ascii=False)))
 
 @st.cache_data(ttl=60, show_spinner=False)
 def load_raw():
@@ -441,9 +456,10 @@ def _goto(v):
 
 MENU_APPS=[
  {"icon":"📋","title":"Punchlist PP18 SI YAN","desc":"ติดตามงานตามกรอบสีแดง 75 จุด — ตาราง · รูปแบบ · แบบแปลนติดจุด · แก้ไขข้อมูล","view":"punchlist","tag":"พร้อมใช้","ready":True},
- {"icon":"🚒","title":"Punchlist FP · Multipurpose","desc":"งานระบบดับเพลิง (FP) ชั้น Multipurpose — ตาราง · แบบแปลนติดจุด · แก้ไขข้อมูล (ชุดแยก แก้ไขได้เอง)","view":"punchlist_fp","tag":"พร้อมใช้","ready":True},
- {"icon":"🧰","title":"งานคงเหลือ (Remaining Work)","desc":"แผนงานระบบที่ยังเหลือ — ไทม์ไลน์ Gantt · ตารางกรอง · แบบแปลนโซน 5 ชั้น (ต้องใส่ PIN)","view":"remaining","tag":"กำลังปรับปรุง","ready":True},
- {"icon":"📝","title":"บันทึกผลงานประจำวัน (Actual)","desc":"บันทึกความยาวท่อติดตั้งจริงรายวัน — ระบบ/โซน/หย่อม · Progress รายวัน · สรุปสะสม · Export (ต้องใส่ PIN)","view":"actual","tag":"พร้อมใช้","ready":True},
+ {"icon":"🚒","title":"Punchlist PP18 (New)","desc":"งานระบบดับเพลิง (FP) ชั้น Multipurpose — ตาราง · แบบแปลนติดจุด · แก้ไขข้อมูล (ชุดแยก แก้ไขได้เอง)","view":"punchlist_fp","tag":"พร้อมใช้","ready":True},
+ # ---- ซ่อนชั่วคราวตามคำขอ (2026-08-07): เปิดคืนได้โดยเอาเครื่องหมาย # ออก ----
+ # {"icon":"🧰","title":"งานคงเหลือ (Remaining Work)","desc":"แผนงานระบบที่ยังเหลือ — ไทม์ไลน์ Gantt · ตารางกรอง · แบบแปลนโซน 5 ชั้น (ต้องใส่ PIN)","view":"remaining","tag":"กำลังปรับปรุง","ready":True},
+ # {"icon":"📝","title":"บันทึกผลงานประจำวัน (Actual)","desc":"บันทึกความยาวท่อติดตั้งจริงรายวัน — ระบบ/โซน/หย่อม · Progress รายวัน · สรุปสะสม · Export (ต้องใส่ PIN)","view":"actual","tag":"พร้อมใช้","ready":True},
  {"icon":"➕","title":"เพิ่มงานถัดไป…","desc":"ช่องสำหรับงานส่วนใหม่ในอนาคต (เพิ่มการ์ดในเมนูได้เรื่อยๆ)","view":None,"tag":"เร็วๆ นี้","ready":False},
 ]
 
@@ -1042,7 +1058,7 @@ def render_punchlist_fp():
     df=enrich(raw)
     left,right=st.columns([4,1])
     with left:
-        st.markdown("### 🚒 Punchlist FP · Multipurpose")
+        st.markdown("### 🚒 Punchlist PP18 (New)")
         st.caption(f"MRT สายสีม่วง (Contract 1) · งานระบบดับเพลิง (FP) ชั้น Multipurpose · {len(df)} จุด")
     with right:
         if st.button("🔄 รีเฟรชข้อมูล", key="fp_refresh", use_container_width=True):
@@ -1076,6 +1092,57 @@ def render_punchlist_fp():
             column_config={C_NO:st.column_config.NumberColumn("ลำดับ",format="%d",width="small"),
                 C_NICK:st.column_config.TextColumn("รหัส/ชื่อเรียก",width="small"),
                 C_PAGE:st.column_config.NumberColumn("หน้า",format="%d",width="small")})
+        # ---- ปุ่มกดเลขจุด → เปิดแบบแปลนของจุดนั้น (ซูมไปที่หมุดอัตโนมัติ) ----
+        meta_t=load_plans_fp()
+        def _code_t(n):
+            r=df[df[C_NO].astype(str).str.strip()==str(n)]
+            v=str(r.iloc[0][C_NICK]).strip() if len(r) else ""
+            return v or str(n)
+        nlist=[]
+        for _,r in df.iterrows():
+            s=str(r[C_NO]).strip()
+            if s in ("","nan"): continue
+            try: nlist.append(int(float(s)))
+            except Exception: continue
+        nlist=sorted(set(nlist))
+        if nlist and meta_t.get("points"):
+            st.markdown("**🔎 กดเลขจุดเพื่อเปิดแบบแปลนของจุดนั้น** (ระบบจะซูมไปที่หมุดให้อัตโนมัติ)")
+            per=7
+            for _st in range(0,len(nlist),per):
+                chunk=nlist[_st:_st+per]; bcols=st.columns(per)
+                for _j,_n in enumerate(chunk):
+                    has=str(_n) in meta_t.get("points",{})
+                    with bcols[_j]:
+                        if st.button(f"{_n} · {_code_t(_n)}", key=f"fpv_{_n}", use_container_width=True,
+                                     disabled=not has, help=(f"ดูแบบของจุด {_code_t(_n)}" if has else "จุดนี้ยังไม่มีตำแหน่งบนแบบ")):
+                            st.session_state["fp_focus_pt"]=_n
+            _fp=st.session_state.get("fp_focus_pt")
+            if _fp is not None and str(_fp) in meta_t.get("points",{}):
+                pos=meta_t["points"][str(_fp)]
+                plan=next((p for p in meta_t.get("plans",[]) if p["key"]==pos["key"]),None)
+                row_t=df[df[C_NO].astype(str).str.strip()==str(_fp)]
+                loc_t=str(row_t.iloc[0][C_LOC]) if len(row_t) else ""
+                if plan is not None:
+                    dmap_t={int(float(r[C_NO])):r for _,r in df.iterrows() if str(r[C_NO]).strip() not in ("","nan")}
+                    pts_t=[]
+                    for n in plan["nos"]:
+                        p2=meta_t["points"].get(str(n)); rw=dmap_t.get(n)
+                        if not p2 or rw is None: continue
+                        mm=STATUS_META.get(str(rw[C_STATUS]).strip(),{})
+                        pts_t.append({"no":str(rw.get(C_NICK,"") or n),"x":p2["x"],"y":p2["y"],"nick":"",
+                            "color":mm.get("color","#8a8a86"),"icon":mm.get("icon","⚪"),
+                            "status":str(rw[C_STATUS]),"floor":str(rw[C_FLOOR]),"sys":str(rw[C_SYS]),
+                            "dwg":str(rw[C_DWG]),"page":str(rw[C_PAGE]),"loc":str(rw[C_LOC]),
+                            "detail":str(rw[C_DETAIL]),"red":str(rw[C_RED]),"owner":str(rw[C_OWNER]),
+                            "start":str(rw[C_START]),"due":str(rw[C_DUE]),"days":fmt_days(rw),
+                            "note":str(rw[C_NOTE] or "")})
+                    hc,xc=st.columns([5,1])
+                    hc.markdown(f"**📍 จุดที่ {_fp} · รหัส {_code_t(_fp)}** — {plan['file']} · หน้า {plan['page']}"+(f" · {loc_t}" if loc_t else ""))
+                    if xc.button("✕ ปิดแบบ", key="fp_focus_close", use_container_width=True):
+                        st.session_state.pop("fp_focus_pt",None); st.rerun()
+                    components.html(build_plan_html(plan_fp_img(plan["key"]), pts_t, height=520, focus=_code_t(_fp)),
+                                    height=540, scrolling=False)
+                    st.caption("🖱️ หมุดสีส้มกะพริบ = จุดที่เลือก · ลาก/ล้อเมาส์ = เลื่อน-ซูม · แตะหมุด = รายละเอียด")
     with tabP:
         meta=load_plans_fp()
         if not meta.get("plans"):
